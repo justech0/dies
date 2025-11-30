@@ -45,7 +45,12 @@ function require_admin(): void
 
 function require_consultant(): void
 {
-    require_role('consultant');
+    require_role('advisor');
+}
+
+function require_advisor(): void
+{
+    require_role('advisor');
 }
 
 function require_user(): void

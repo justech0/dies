@@ -6,7 +6,7 @@ $pdo = get_db_connection();
 $stats = [
     'listings' => (int)$pdo->query('SELECT COUNT(*) FROM listings')->fetchColumn(),
     'pending' => (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE status = 'pending'")->fetchColumn(),
-    'consultants' => (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'consultant'")->fetchColumn(),
+    'consultants' => (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'advisor'")->fetchColumn(),
     'offices' => (int)$pdo->query('SELECT COUNT(*) FROM offices')->fetchColumn(),
 ];
 ?>

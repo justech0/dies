@@ -7,24 +7,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'promote') {
         $userId = (int)$_POST['user_id'];
-        $stmt = $pdo->prepare('UPDATE users SET role = "consultant" WHERE id = ?');
+        $stmt = $pdo->prepare('UPDATE users SET role = "advisor" WHERE id = ?');
         $stmt->execute([$userId]);
-        log_activity(current_user()['id'], 'admin', 'promote_consultant');
+        log_activity(current_user()['id'], 'admin', 'promote_advisor');
     }
     if ($action === 'create') {
         $name = $_POST['name'] ?? '';
         $email = $_POST['email'] ?? '';
         $phone = $_POST['phone'] ?? '';
         $password = $_POST['password'] ?? '';
-        $stmt = $pdo->prepare('INSERT INTO users (role, name, email, phone, username, password_hash, created_at, updated_at) VALUES ("consultant", ?, ?, ?, ?, ?, NOW(), NOW())');
-        $stmt->execute([$name, $email, $phone, $email, password_hash($password, PASSWORD_BCRYPT)]);
-        log_activity(current_user()['id'], 'admin', 'consultant_created');
+        $stmt = $pdo->prepare('INSERT INTO users (role, name, email, phone, password, created_at, updated_at) VALUES ("advisor", ?, ?, ?, ?, NOW(), NOW())');
+        $stmt->execute([$name, $email, $phone, password_hash($password, PASSWORD_BCRYPT)]);
+        log_activity(current_user()['id'], 'admin', 'advisor_created');
     }
     header('Location: consultants.php');
     exit();
 }
 
-$consultants = $pdo->query("SELECT * FROM users WHERE role = 'consultant' ORDER BY created_at DESC")->fetchAll();
+$consultants = $pdo->query("SELECT * FROM users WHERE role = 'advisor' ORDER BY created_at DESC")->fetchAll();
 $users = $pdo->query("SELECT id, name, email FROM users WHERE role = 'user'")->fetchAll();
 ?>
 <!DOCTYPE html>
