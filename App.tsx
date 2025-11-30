@@ -56,6 +56,8 @@ const Login = () => {
                 data.append('role', 'user'); // Force user role for public registration
             }
 
+            data.append('action', isLogin ? 'login' : 'register');
+
             const response = await fetch('/api/auth.php', {
                 method: 'POST',
                 body: data
