@@ -13,10 +13,11 @@ export const MOCK_ADVISORS: Advisor[] = [
   {
     id: 1,
     name: "Abdurrahman Tayğav",
-    role: "Kurucu Ortak",
+    role: "Kurucu Ortak & Broker",
     phone: "+90 543 868 26 68",
     image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400&h=400",
     isFounder: true,
+    about: "Sektörde 15 yılı aşkın tecrübesiyle Batman'ın en prestijli projelerine imza atmıştır. Müşteri memnuniyeti odaklı çalışma prensibi ve geniş yatırımcı ağı ile gayrimenkul danışmanlığında fark yaratmaktadır. Özellikle ticari gayrimenkul ve arsa yatırımları konusunda uzmandır.",
     social: {
         instagram: "https://www.instagram.com/diesgayrimenkul/",
         facebook: "https://www.facebook.com/diesgayrimenkul/"
@@ -26,15 +27,26 @@ export const MOCK_ADVISORS: Advisor[] = [
   {
     id: 2,
     name: "İsmail Demirbilek",
-    role: "Kurucu Ortak",
+    role: "Kurucu Ortak & Broker",
     phone: "+90 505 996 96 12",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400&h=400",
     isFounder: true,
+    about: "İnşaat ve emlak sektöründeki köklü geçmişi ile Dies Gayrimenkul'ün kurucu ortaklarındandır. Lüks konut satışları ve proje pazarlama konularında derin bir bilgi birikimine sahiptir. Batman'da modern yaşam alanlarının pazarlanmasında öncü rol oynamaktadır.",
     social: {
         instagram: "https://www.instagram.com/diesgayrimenkul/",
         facebook: "https://www.facebook.com/diesgayrimenkul/"
     },
     stats: { totalSales: 120, activeListings: 8, experience: 10 }
+  },
+  {
+    id: 3,
+    name: "Ahmet Yılmaz",
+    role: "Gayrimenkul Danışmanı",
+    phone: "+90 555 123 45 67",
+    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=400&h=400",
+    isFounder: false,
+    about: "Anadolu Üniversitesi İktisat Fakültesi mezunu olan Ahmet Yılmaz, 5 yıldır profesyonel gayrimenkul danışmanlığı yapmaktadır. Konut satışı ve kiralama konularında uzmanlaşmıştır. Müşterilerine doğru fiyatlandırma ve hızlı sonuç alma konularında rehberlik etmektedir. Güler yüzlü hizmeti ve şeffaf çalışma anlayışı ile tanınır.",
+    stats: { totalSales: 45, activeListings: 5, experience: 5 }
   }
 ];
 
@@ -122,7 +134,7 @@ export const MOCK_PROPERTIES: Property[] = [
     bathrooms: 1,
     area: 165,
     netArea: 150,
-    advisorId: 1,
+    advisorId: 3, // Assigned to new advisor
     description: "Belde mahallesinde, park ve okullara yakın, önü açık, ferah kiralık daire. Boyalı ve temiz teslim edilecektir.",
     features: ["Asansör", "Balkon", "Doğalgaz", "Parke Zemin"],
     date: "2024-05-28",
