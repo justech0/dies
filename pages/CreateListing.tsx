@@ -379,12 +379,12 @@ export const CreateListing = () => {
   const labelClass = `block text-sm font-bold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`;
 
   return (
-    <div className="container mx-auto px-4 py-12 pt-32">
+    <div className="container mx-auto px-4 py-8 md:py-12 pt-32">
         <div className="max-w-4xl mx-auto">
             <h1 className={`text-3xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 {editingProperty ? 'İlanı Düzenle' : 'Yeni İlan Oluştur'}
             </h1>
-            <form onSubmit={handleSubmit} className={`p-8 rounded-2xl shadow-xl ${theme === 'dark' ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100'}`}>
+            <form onSubmit={handleSubmit} className={`p-5 md:p-8 rounded-2xl shadow-xl ${theme === 'dark' ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-gray-100'}`}>
                 
                 <div className="space-y-6">
                     <div>

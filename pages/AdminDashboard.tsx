@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../components/AuthContext';
@@ -304,7 +302,7 @@ export const AdminDashboard = () => {
   
   const handleOfficeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-          const files = Array.from(e.target.files);
+          const files = Array.from(e.target.files) as File[];
           // Check limit (existing + new <= 3)
           if (officeFiles.length + files.length > 3) {
               alert("En fazla 3 dosya yükleyebilirsiniz.");
@@ -421,10 +419,10 @@ export const AdminDashboard = () => {
             <button onClick={() => setActiveTab('settings')} className={`px-6 py-3 font-bold rounded-t-lg whitespace-nowrap ${activeTab === 'settings' ? 'bg-dies-blue text-white' : 'text-gray-500 hover:bg-gray-50'}`}>Site Ayarları</button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-soft border border-gray-100 p-6 min-h-[500px]">
+      <div className="bg-white rounded-2xl shadow-soft border border-gray-100 p-4 md:p-6 min-h-[500px]">
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <div className="p-6 bg-blue-50 rounded-xl border border-blue-100">
                     <div className="flex items-center gap-3 mb-2">
                         <Users className="text-dies-blue" />
@@ -461,7 +459,7 @@ export const AdminDashboard = () => {
             <div>
                 <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Users /> Kullanıcı Yönetimi</h3>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left min-w-[600px]">
                         <thead>
                             <tr className="border-b border-gray-200">
                                 <th className="pb-3 pl-2">ID</th>
@@ -564,7 +562,7 @@ export const AdminDashboard = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left min-w-[700px]">
                         <thead>
                             <tr className="border-b border-gray-200 text-gray-500 text-sm">
                                 <th className="pb-3 pl-2">Görsel</th>
@@ -632,17 +630,17 @@ export const AdminDashboard = () => {
         {/* APPROVALS & OFFICES TAB */}
         {activeTab === 'offices' && (
             <div>
-                 <div className="flex gap-4 mb-6 border-b border-gray-100">
-                     <button onClick={() => setActiveApprovalsSubTab('listings')} className={`pb-2 font-bold ${activeApprovalsSubTab === 'listings' ? 'text-dies-blue border-b-2 border-dies-blue' : 'text-gray-400'}`}>İlan Onayları ({pendingListings.length})</button>
-                     <button onClick={() => setActiveApprovalsSubTab('advisors')} className={`pb-2 font-bold ${activeApprovalsSubTab === 'advisors' ? 'text-dies-blue border-b-2 border-dies-blue' : 'text-gray-400'}`}>Danışman Başvuruları ({advisorApplications.length})</button>
-                     <button onClick={() => setActiveApprovalsSubTab('offices')} className={`pb-2 font-bold ${activeApprovalsSubTab === 'offices' ? 'text-dies-blue border-b-2 border-dies-blue' : 'text-gray-400'}`}>Ofis İşlemleri</button>
+                 <div className="flex gap-4 mb-6 border-b border-gray-100 overflow-x-auto pb-2">
+                     <button onClick={() => setActiveApprovalsSubTab('listings')} className={`pb-2 font-bold whitespace-nowrap ${activeApprovalsSubTab === 'listings' ? 'text-dies-blue border-b-2 border-dies-blue' : 'text-gray-400'}`}>İlan Onayları ({pendingListings.length})</button>
+                     <button onClick={() => setActiveApprovalsSubTab('advisors')} className={`pb-2 font-bold whitespace-nowrap ${activeApprovalsSubTab === 'advisors' ? 'text-dies-blue border-b-2 border-dies-blue' : 'text-gray-400'}`}>Danışman Başvuruları ({advisorApplications.length})</button>
+                     <button onClick={() => setActiveApprovalsSubTab('offices')} className={`pb-2 font-bold whitespace-nowrap ${activeApprovalsSubTab === 'offices' ? 'text-dies-blue border-b-2 border-dies-blue' : 'text-gray-400'}`}>Ofis İşlemleri</button>
                  </div>
 
                  {activeApprovalsSubTab === 'listings' && (
                      <div>
                         <h3 className="font-bold mb-4 text-gray-700">Onay Bekleyen Kullanıcı İlanları</h3>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                            <table className="w-full text-left min-w-[600px]">
                                 <thead>
                                     <tr className="border-b border-gray-200">
                                         <th className="pb-3 pl-2">Görsel</th>
@@ -697,7 +695,7 @@ export const AdminDashboard = () => {
 
                  {activeApprovalsSubTab === 'advisors' && (
                      <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                        <table className="w-full text-left min-w-[600px]">
                             <thead>
                                 <tr className="border-b border-gray-200">
                                     <th className="pb-3">Ad Soyad</th>
@@ -738,35 +736,37 @@ export const AdminDashboard = () => {
                      <div>
                          <div className="mb-8">
                              <h4 className="font-bold mb-4 text-gray-700">Ofis Başvuruları</h4>
-                             <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b border-gray-200">
-                                        <th className="pb-3">Ad Soyad</th>
-                                        <th className="pb-3">Şehir</th>
-                                        <th className="pb-3">Meslek</th>
-                                        <th className="pb-3">Tarih</th>
-                                        <th className="pb-3 text-right">İşlem</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {officeApplications.map(app => (
-                                        <tr key={app.id} className="border-b border-gray-50 hover:bg-gray-50">
-                                            <td className="py-4 font-bold">{app.firstName} {app.lastName}</td>
-                                            <td className="py-4">{app.city}</td>
-                                            <td className="py-4 text-sm">{app.profession}</td>
-                                            <td className="py-4 text-sm text-gray-500">{app.date}</td>
-                                            <td className="py-4 text-right">
-                                                {app.status === 'pending' ? (
-                                                    <div className="flex justify-end gap-2">
-                                                        <button onClick={() => handleOfficeApprove(app.id)} className="text-green-600 hover:bg-green-50 p-2 rounded" title="Onayla"><CheckCircle size={18} /></button>
-                                                        <button onClick={() => handleRejectOfficeApp(app.id)} className="text-red-600 hover:bg-red-50 p-2 rounded" title="Reddet ve Sil"><Trash2 size={18} /></button>
-                                                    </div>
-                                                ) : <span className="text-green-600 font-bold text-xs uppercase">Onaylandı</span>}
-                                            </td>
+                             <div className="overflow-x-auto">
+                                <table className="w-full text-left min-w-[600px]">
+                                    <thead>
+                                        <tr className="border-b border-gray-200">
+                                            <th className="pb-3">Ad Soyad</th>
+                                            <th className="pb-3">Şehir</th>
+                                            <th className="pb-3">Meslek</th>
+                                            <th className="pb-3">Tarih</th>
+                                            <th className="pb-3 text-right">İşlem</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                             </table>
+                                    </thead>
+                                    <tbody>
+                                        {officeApplications.map(app => (
+                                            <tr key={app.id} className="border-b border-gray-50 hover:bg-gray-50">
+                                                <td className="py-4 font-bold">{app.firstName} {app.lastName}</td>
+                                                <td className="py-4">{app.city}</td>
+                                                <td className="py-4 text-sm">{app.profession}</td>
+                                                <td className="py-4 text-sm text-gray-500">{app.date}</td>
+                                                <td className="py-4 text-right">
+                                                    {app.status === 'pending' ? (
+                                                        <div className="flex justify-end gap-2">
+                                                            <button onClick={() => handleOfficeApprove(app.id)} className="text-green-600 hover:bg-green-50 p-2 rounded" title="Onayla"><CheckCircle size={18} /></button>
+                                                            <button onClick={() => handleRejectOfficeApp(app.id)} className="text-red-600 hover:bg-red-50 p-2 rounded" title="Reddet ve Sil"><Trash2 size={18} /></button>
+                                                        </div>
+                                                    ) : <span className="text-green-600 font-bold text-xs uppercase">Onaylandı</span>}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                             </div>
                          </div>
 
                          <div className="border-t border-gray-200 pt-8">
@@ -777,7 +777,7 @@ export const AdminDashboard = () => {
                              
                              <div className="grid gap-4">
                                 {offices.map(office => (
-                                    <div key={office.id} className="border p-4 rounded-xl flex justify-between items-center bg-gray-50">
+                                    <div key={office.id} className="border p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 gap-4">
                                         <div>
                                             <h4 className="font-bold text-lg">{office.name}</h4>
                                             <p className="text-sm text-gray-500">{office.city}, {office.district}</p>
@@ -791,19 +791,19 @@ export const AdminDashboard = () => {
                                  <div id="officeFormAnchor" className="mt-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
                                      <h3 className="font-bold text-lg mb-4">{editingOffice ? 'Ofisi Düzenle' : 'Yeni Ofis Ekle'}</h3>
                                      <form onSubmit={handleSaveOffice} className="space-y-4">
-                                         <div className="grid grid-cols-2 gap-4">
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                              <div><label className={labelClass}>Ofis Adı</label><input required className={inputClass} value={officeFormData.name} onChange={e => setOfficeFormData({...officeFormData, name: e.target.value})} /></div>
                                              <div><label className={labelClass}>Şehir</label><input required className={inputClass} value={officeFormData.city} onChange={e => setOfficeFormData({...officeFormData, city: e.target.value})} /></div>
                                              <div><label className={labelClass}>İlçe</label><input required className={inputClass} value={officeFormData.district} onChange={e => setOfficeFormData({...officeFormData, district: e.target.value})} /></div>
                                              <div><label className={labelClass}>Adres</label><input required className={inputClass} value={officeFormData.address} onChange={e => setOfficeFormData({...officeFormData, address: e.target.value})} /></div>
                                              <div><label className={labelClass}>Telefon</label><input required className={inputClass} value={officeFormData.phone} onChange={e => setOfficeFormData({...officeFormData, phone: e.target.value})} /></div>
                                              
-                                             <div className="col-span-2 space-y-2">
+                                             <div className="md:col-span-2 space-y-2">
                                                  <label className={labelClass}>Görsel URL (Ana Resim)</label>
                                                  <input className={inputClass} value={officeFormData.image} onChange={e => setOfficeFormData({...officeFormData, image: e.target.value})} placeholder="https://..." />
                                              </div>
 
-                                             <div className="col-span-2 space-y-2">
+                                             <div className="md:col-span-2 space-y-2">
                                                 <label className={labelClass}>Ofis Görselleri (Max 3 Dosya)</label>
                                                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors relative cursor-pointer">
                                                     <input 

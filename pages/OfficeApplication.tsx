@@ -68,5 +68,84 @@ export const OfficeApplication = () => {
                             <input required type="email" placeholder="ornek@email.com" className={inputClass} />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                             <div className="md
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div>
+                                <label className={labelClass}>Telefon</label>
+                                <input required type="tel" placeholder="05XX XXX XX XX" className={inputClass} />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Talep Edilen Şehir/Bölge</label>
+                                <input required type="text" placeholder="Şehir giriniz" className={inputClass} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className={labelClass}>Mevcut Meslek</label>
+                                <input type="text" placeholder="Mesleğiniz" className={inputClass} />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Yatırım Bütçesi</label>
+                                <select className={inputClass}>
+                                    <option>Seçiniz</option>
+                                    <option>500.000 TL - 1.000.000 TL</option>
+                                    <option>1.000.000 TL - 2.500.000 TL</option>
+                                    <option>2.500.000 TL ve üzeri</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>Eklemek İstedikleriniz (Opsiyonel)</label>
+                            <textarea rows={4} className={inputClass} placeholder="Bize kendinizden ve hedeflerinizden bahsedin..."></textarea>
+                        </div>
+
+                        <button type="submit" className="w-full bg-dies-blue hover:bg-blue-900 text-white font-bold text-lg py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2">
+                            BAŞVURU GÖNDER <ArrowRight size={20} />
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {/* Sidebar Info */}
+            <div className="hidden lg:block w-96 sticky top-32">
+                <div className="bg-dies-blue text-white p-8 rounded-3xl shadow-xl relative overflow-hidden">
+                    {/* Decorative Blob */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                    
+                    <h3 className="text-2xl font-bold mb-6">Neden Dies?</h3>
+                    <ul className="space-y-4">
+                        <li className="flex items-start gap-3">
+                            <CheckCircle className="shrink-0 mt-1 text-dies-red" />
+                            <span className="text-blue-100 text-sm">Güçlü marka bilinirliği ve kurumsal kimlik.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircle className="shrink-0 mt-1 text-dies-red" />
+                            <span className="text-blue-100 text-sm">Geniş portföy ağı ve CRM altyapısı.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircle className="shrink-0 mt-1 text-dies-red" />
+                            <span className="text-blue-100 text-sm">Hukuk ve eğitim desteği.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircle className="shrink-0 mt-1 text-dies-red" />
+                            <span className="text-blue-100 text-sm">Bölge koruması ve yüksek kazanç modeli.</span>
+                        </li>
+                    </ul>
+
+                    <div className="mt-8 pt-8 border-t border-white/20">
+                        <div className="flex items-center gap-3">
+                            <Phone className="text-dies-red" />
+                            <div>
+                                <p className="text-xs text-blue-200 uppercase tracking-wide">Franchise Destek Hattı</p>
+                                <p className="font-bold text-lg">+90 543 868 26 68</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+};

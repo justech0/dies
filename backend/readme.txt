@@ -1,127 +1,119 @@
 
-# DİES GAYRİMENKUL - FULL STACK PHP ENTEGRASYON REHBERİ
+# DİES GAYRİMENKUL - FULL STACK PHP & MYSQL ENTEGRASYON KILAVUZU
 
-Bu rehber, React (Frontend) uygulamasını gerçek bir MySQL veritabanına ve PHP Backend sistemine bağlamak için yapılması gereken tüm adımları ve yazılması gereken kod parçacıklarını içerir.
-
-Sistem tamamen birbirine bağlı (Relational) çalışacak şekilde tasarlanmalıdır.
+Bu doküman, React Frontend uygulamasını profesyonel bir PHP/MySQL Backend sistemine dönüştürmek için gerekli tüm adımları, veritabanı mimarisini ve API uç noktalarını detaylandırır.
 
 ---
 
-## 1. VERİTABANI YAPISI (SQL)
-İlk olarak `schema.sql` dosyasını oluşturup phpMyAdmin'de import etmelisiniz. Tablolar birbirine `Foreign Key` ile bağlı olmalıdır.
+## BÖLÜM 1: GELİŞMİŞ MYSQL VERİTABANI MİMARİSİ (Schema)
 
-*   **users:** (id, name, email, password_hash, role, phone, image, created_at)
-*   **properties:** (id, title, price, ... , advisor_id [FK->users.id], status ['pending','active'], created_at)
-*   **property_images:** (id, property_id [FK], image_url, is_cover) -> Çoklu resim için.
-*   **offices:** (id, name, city, district, ...)
-*   **applications:** (id, type ['advisor','office'], name, phone, status, ...)
-*   **site_settings:** (id, key, value) -> Hero resmi, vitrin ayarları vb.
+Sitenin dinamik çalışması için aşağıdaki tabloların oluşturulması gerekmektedir. Özellikle "Detaylı Filtreleme" ve "İlan Verme" kısımlarında Türkiye verileri (İl/İlçe/Mahalle) için ilişkisel tablo yapısı kullanılmalıdır.
+
+### 1. Konum Veritabanı (Türkiye Verileri)
+Statik JSON yerine, veritabanından dinamik çekilen yapı:
+*   **`cities`** (iller):
+    *   `id` (PK), `name` (örn: Batman, İstanbul), `plate_no` (örn: 72)
+*   **`districts`** (ilçeler):
+    *   `id` (PK), `city_id` (FK -> cities.id), `name` (örn: Merkez, Kozluk)
+*   **`neighborhoods`** (mahalleler):
+    *   `id` (PK), `district_id` (FK -> districts.id), `name` (örn: Kültür Mah, Belde Mah)
+
+### 2. Kullanıcılar ve Yetkilendirme
+*   **`users`**:
+    *   `id`, `name`, `email`, `password_hash`, `role` ('admin', 'advisor', 'user'), `phone`, `image_url`, `created_at`
+*   **`advisors`** (Ekstra detaylar):
+    *   `user_id` (FK), `about_text`, `specializations` (JSON), `total_sales_count`
+
+### 3. Gayrimenkuller (İlanlar)
+*   **`properties`**:
+    *   `id`, `advisor_id` (FK -> users.id), `title`, `price`, `currency`, `category` (Konut/Ticari/Arsa), `type` (Satılık/Kiralık)
+    *   `city_id` (FK), `district_id` (FK), `neighborhood_id` (FK) -> *Konum tablosuna bağlı*
+    *   `bedrooms`, `bathrooms`, `area_gross`, `area_net`, `building_age`, `heating_type`, `floor_location`
+    *   `description`, `features` (JSON olarak saklanabilir: ["Balkon", "Asansör"]), `status` ('pending', 'active', 'sold', 'rejected')
+    *   `created_at`, `updated_at`
+
+### 4. Medya
+*   **`property_images`**:
+    *   `id`, `property_id` (FK), `image_url`, `is_cover` (Boolean), `sort_order`
+
+### 5. Başvurular ve Diğerleri
+*   **`applications`**: `id`, `type` ('advisor_application', 'office_application'), `name`, `phone`, `details` (JSON), `status`
+*   **`offices`**: `id`, `name`, `city`, `address`, `phone`, `coordinates`
+*   **`settings`**: `key` (örn: 'hero_title'), `value`
 
 ---
 
-## 2. GEREKLİ PHP API DOSYALARI VE İŞLEVLERİ
+## BÖLÜM 2: PHP API DOSYALARI VE İŞLEVLERİ
 
-Aşağıdaki dosyaları `backend/api/` klasörü altında oluşturmalısınız.
+Backend klasörü (`/api/`) altında oluşturulması gereken dosyalar ve içermesi gereken kod mantığı:
 
-### A. Genel Ayarlar
-*   **`config.php`**: Veritabanı bağlantısı (PDO) ve CORS ayarlarını (React ile iletişim için) içerir.
-*   **`utils.php`**: Ortak fonksiyonlar (JSON response formatlama, Güvenlik/Sanitization fonksiyonları).
+### A. Bağlantı ve Yardımcılar
+1.  **`db.php`**: PDO kullanarak MySQL bağlantısını sağlar. CORS header'larını ayarlar (React'in erişimi için).
+2.  **`functions.php`**: Güvenlik (Input sanitization), JWT Token doğrulama, JSON yanıt formatlama fonksiyonları.
 
-### B. Kimlik Doğrulama (Auth) & Profil
-**Dosya:** `api_auth.php`
-1.  **POST /login**: E-posta ve şifreyi kontrol et. Başarılıysa User objesini ve (opsiyonel) JWT token döndür.
-2.  **POST /register**: Yeni kullanıcı kaydı. Şifreyi `password_hash()` ile şifrele. Varsayılan rol: 'user'.
-3.  **POST /update-profile**: 
-    *   Kullanıcının kendi bilgilerini güncellemesi.
-    *   Şifre değişimi varsa yeniden hashle.
-    *   Profil resmi yüklenirse `api_upload.php` ile işle ve URL'i kaydet.
+### B. Konum Servisi (Detaylı Filtreleme İçin)
+**Dosya:** `api_locations.php`
+*   **GET /?type=cities**: `SELECT * FROM cities` döndürür. (İlan ver/Filtrele ili doldurur)
+*   **GET /?type=districts&city_id=X**: Seçilen ile ait ilçeleri döndürür.
+*   **GET /?type=neighborhoods&district_id=Y**: Seçilen ilçeye ait mahalleleri döndürür.
 
-### C. İlan Yönetimi (Properties)
+### C. İlan Yönetimi (İlan Ver & Listeleme)
 **Dosya:** `api_properties.php`
-1.  **GET /list**: 
-    *   Tüm onaylı (`status='active'`) ilanları çek.
-    *   Filtreleme parametrelerini (il, ilçe, fiyat aralığı, oda sayısı) SQL `WHERE` koşullarına ekle.
-    *   İlişkili `advisor_id` üzerinden kullanıcı verisini `JOIN` ile çek.
-2.  **GET /detail?id=X**: Tek bir ilanın tüm detaylarını, resimlerini ve danışman bilgisini çek.
-3.  **POST /create**: 
-    *   Yeni ilan ekle.
-    *   Eğer ekleyen `role='user'` ise `status='pending'` (Onay Bekliyor) yap.
-    *   Eğer ekleyen `admin` veya `advisor` ise `status='active'` yap.
-    *   Çoklu resim yollarını `property_images` tablosuna kaydet.
-4.  **POST /update**: İlanı güncelle (Sadece ilanın sahibi veya Admin yapabilir).
-5.  **POST /delete**: İlanı sil (Sadece ilanın sahibi veya Admin yapabilir).
+*   **GET /list**:
+    *   Parametreler: `?city=X&min_price=Y&room=Z...`
+    *   SQL Mantığı: Gelen parametrelere göre dinamik `WHERE` sorgusu oluşturur. Sadece `status='active'` olanları çeker.
+    *   Response: İlan listesi + kapak fotoğrafı + danışman adı.
+*   **GET /detail?id=X**: İlanın tüm detaylarını, tüm resimlerini (`property_images` tablosundan) ve danışman iletişim bilgilerini çeker.
+*   **POST /create**:
+    *   React'tan gelen JSON verisini ve `features` dizisini alır.
+    *   `properties` tablosuna ekler.
+    *   Eğer kullanıcı 'admin' değilse `status` varsayılan olarak `'pending'` (Onay Bekliyor) olur.
+*   **POST /update**: İlanı günceller.
+*   **POST /delete**: İlanı siler (Soft delete önerilir: `is_deleted=1`).
 
-### D. Dosya Yükleme Servisi (Önemli)
+### D. Dosya Yükleme (Resimler)
 **Dosya:** `api_upload.php`
-1.  React'tan gelen `FormData` (resim dosyaları) verisini al.
-2.  Dosyayı sunucuda `uploads/` klasörüne taşı.
-3.  Dosya adını benzersiz yap (örn: `uniqid() . '.jpg'`).
-4.  Geriye dosyanın tam URL'ini döndür (örn: `https://site.com/uploads/resim123.jpg`).
-*   *Not:* İlan ekleme ve Profil resmi güncelleme sayfaları bu servisi kullanacak.
+*   React `CreateListing.tsx` sayfasından gelen `FormData` (files[]) verisini karşılar.
+*   Dosyaları sunucuda `/uploads/properties/` klasörüne benzersiz isimle kaydeder.
+*   Geriye dosya URL'lerini JSON dizisi olarak döndürür.
 
-### E. Admin Paneli & Yönetim
-**Dosya:** `api_admin.php` (Sadece Admin yetkisi ile erişilebilir olmalı)
-1.  **GET /stats**: Dashboard'daki sayaçlar (Toplam üye, bekleyen ilan, toplam satış vb.) için `COUNT` sorguları.
-2.  **GET /users**: Tüm kullanıcıları listele.
-3.  **POST /update-user-role**: Bir kullanıcının rolünü (User <-> Advisor <-> Admin) değiştir. Rol `advisor` olunca `advisors` tablosuna (veya user detaylarına) ekleme yap.
-4.  **GET /pending-properties**: Onay bekleyen (`status='pending'`) ilanları listele.
-5.  **POST /approve-property**: İlanın durumunu `active` yap.
-6.  **POST /reject-property**: İlanı sil veya durumunu `rejected` yap.
-7.  **GET /applications**: Ofis ve Danışman başvurularını listele.
-8.  **POST /manage-application**: Başvuruyu onayla/reddet.
+### E. Admin Paneli (AdminDashboard)
+**Dosya:** `api_admin.php` (Mutlaka Admin Token kontrolü yapılmalı)
+*   **GET /dashboard-stats**:
+    *   Toplam Üye, Yayındaki İlan, Bekleyen İlan sayılarını tek sorguda döndürür.
+*   **GET /pending-listings**: `WHERE status = 'pending'` olan ilanları çeker.
+*   **POST /approve-listing**: İlanın durumunu `'active'` yapar.
+*   **POST /reject-listing**: İlanı reddeder veya siler.
+*   **GET /users**: Tüm üyeleri listeler.
+*   **POST /change-role**: Kullanıcıyı 'user' -> 'advisor' veya 'admin' yapar.
 
-### F. Ofisler ve Danışmanlar
-**Dosya:** `api_offices.php`
-*   CRUD işlemleri (Ekle, Listele, Düzenle, Sil).
-*   Ofis resimleri için `api_upload.php` entegrasyonu.
-
-**Dosya:** `api_advisors.php`
-*   **GET /list**: Rolü `advisor` olan kullanıcıları ve istatistiklerini çek.
-*   **GET /detail**: Danışmanın detaylarını ve ona ait ilanları (`properties` tablosundan) çek.
-
-### G. Site Ayarları
-**Dosya:** `api_settings.php`
-*   Hero görseli, başlık, vitrin ilanlarının ID'leri gibi ayarları veritabanından okuma ve yazma (Admin only).
+### F. Kimlik Doğrulama (Auth)
+**Dosya:** `api_auth.php`
+*   **POST /login**: Email/Şifre kontrolü. Başarılıysa User bilgisi ve Token döner.
+*   **POST /register**: Yeni kayıt. Şifre `password_hash` ile şifrelenmeli.
+*   **GET /me**: Token gönderildiğinde kullanıcının güncel bilgilerini döner.
 
 ---
 
-## 3. REACT ENTEGRASYONU (FRONTEND)
+## BÖLÜM 3: REACT FRONTEND ENTEGRASYONU (Yapılacaklar)
 
-Backend hazır olduktan sonra React tarafında `services/mockData.ts` yerine gerçek API çağrıları yazılmalıdır.
+Backend hazırlandıktan sonra React tarafında yapılması gereken değişiklikler:
 
-**Örnek: İlan Ekleme (CreateListing.tsx)**
-```javascript
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // 1. Önce Resimleri Yükle
-    const formDataImages = new FormData();
-    images.forEach(img => formDataImages.append('files[]', img));
-    
-    const uploadRes = await fetch('api/api_upload.php', { method: 'POST', body: formDataImages });
-    const uploadedUrls = await uploadRes.json(); // ['url1.jpg', 'url2.jpg']
+1.  **AdvancedFilter.tsx ve CreateListing.tsx:**
+    *   `MOCK_DATA` kullanımı kaldırılacak.
+    *   `useEffect` içinde `fetch('api/api_locations.php?type=cities')` çağrılacak.
+    *   İl seçilince `api_locations.php?type=districts&city_id=...` çağrılıp ilçe dropdown'ı doldurulacak.
 
-    // 2. İlan Verisini Gönder
-    const propertyData = {
-        title: form.title,
-        price: form.price,
-        images: uploadedUrls,
-        advisorId: user.id, // AuthContext'ten gelen ID
-        ...diğerAlanlar
-    };
+2.  **Home.tsx ve Listings.tsx:**
+    *   İlanlar `fetch('api/api_properties.php')` ile çekilecek.
 
-    const res = await fetch('api/api_properties.php?action=create', {
-        method: 'POST',
-        body: JSON.stringify(propertyData)
-    });
-    
-    if(res.ok) alert("İlan eklendi!");
-};
-```
+3.  **AdminDashboard.tsx:**
+    *   Onay bekleyen ilanlar `api_admin.php` üzerinden çekilecek.
+    *   "Onayla" butonu API'ye `POST` isteği atacak.
 
-**Örnek: Profil ve İlanlarım İlişkisi**
-*   `Profile.tsx` sayfasında `useEffect` ile `api_properties.php?advisor_id={user.id}` isteği atarak, sadece giriş yapan kullanıcının ilanlarını listelemelisiniz.
+4.  **Resim Yükleme:**
+    *   `CreateListing.tsx` içindeki dosya yükleme fonksiyonu, dosyaları doğrudan `api_upload.php` adresine POST etmeli ve dönen URL'leri form verisine eklemelidir.
 
 ---
 
-Bu yapı kurulduğunda siteniz tamamen dinamik, veritabanı destekli ve yönetim paneli üzerinden yönetilebilir profesyonel bir Emlak platformu olacaktır.
+Bu yapı, Dies Gayrimenkul'ü ölçeklenebilir, güvenli ve tamamen yönetilebilir bir platform haline getirecektir.

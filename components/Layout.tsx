@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 // @ts-ignore
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -200,9 +201,12 @@ const Navbar = () => {
 
               <div className="mt-auto pt-8">
                 <p className="text-gray-400 text-xs uppercase tracking-widest mb-4">İletişim</p>
-                <div className="flex items-center gap-3 mb-2 text-dies-dark font-medium">
-                    <Phone size={18} className="text-dies-red" />
-                    <a href="tel:+905438682668" className="hover:text-dies-blue">+90 543 868 26 68</a>
+                <div className="flex items-start gap-3 mb-4 text-dies-dark font-medium">
+                    <Phone size={18} className="text-dies-red mt-1" />
+                    <div className="flex flex-col gap-2">
+                        <a href="tel:+905438682668" className="hover:text-dies-blue">+90 543 868 26 68</a>
+                        <a href="tel:+905059969612" className="hover:text-dies-blue">+90 505 996 96 12</a>
+                    </div>
                 </div>
                 <div className="flex gap-4 mt-6">
                     <a href="https://www.instagram.com/diesgayrimenkul/" target="_blank" rel="noreferrer" className="text-dies-blue hover:text-dies-red">

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Filter, Search, RotateCcw } from 'lucide-react';
 import { TURKEY_LOCATIONS } from '../services/mockData';
@@ -55,13 +56,13 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
     : [];
 
   return (
-    <form onSubmit={handleSubmit} className="p-8 rounded-3xl shadow-soft bg-white border border-gray-100">
-      <div className="flex items-center gap-2 mb-8 pb-4 border-b border-gray-100">
+    <form onSubmit={handleSubmit} className="p-5 md:p-8 rounded-3xl shadow-soft bg-white border border-gray-100">
+      <div className="flex items-center gap-2 mb-6 md:mb-8 pb-4 border-b border-gray-100">
         <div className="p-2 bg-blue-50 rounded-lg text-dies-blue"><Filter size={20} /></div>
         <h3 className="font-bold text-xl text-dies-dark">Detaylı Filtreleme</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <div>
             <label className={labelClass}>İlan Durumu</label>
             <select name="status" value={filters.status} onChange={handleChange} className={inputClass}>
@@ -138,32 +139,32 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
 
         <div className="lg:col-span-2">
             <label className={labelClass}>Fiyat Aralığı (TL)</label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
                 <input type="number" name="minPrice" value={filters.minPrice} onChange={handleChange} placeholder="Min" className={inputClass} />
                 <input type="number" name="maxPrice" value={filters.maxPrice} onChange={handleChange} placeholder="Max" className={inputClass} />
             </div>
         </div>
          <div className="lg:col-span-2">
             <label className={labelClass}>Metrekare (m²)</label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
                 <input type="number" name="minArea" value={filters.minArea} onChange={handleChange} placeholder="Min" className={inputClass} />
                 <input type="number" name="maxArea" value={filters.maxArea} onChange={handleChange} placeholder="Max" className={inputClass} />
             </div>
         </div>
       </div>
 
-      <div className="mt-8 flex justify-end gap-4">
+      <div className="mt-8 flex flex-col sm:flex-row justify-end gap-4">
         <button 
             type="button"
             onClick={handleClear}
-            className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-4 rounded-xl font-bold transition-all w-full md:w-auto"
+            className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-4 rounded-xl font-bold transition-all w-full sm:w-auto"
         >
             <RotateCcw size={20} />
             Temizle
         </button>
         <button 
             type="submit" 
-            className="flex items-center justify-center gap-2 bg-dies-red hover:bg-red-700 text-white px-10 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl w-full md:w-auto"
+            className="flex items-center justify-center gap-2 bg-dies-red hover:bg-red-700 text-white px-10 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl w-full sm:w-auto"
         >
             <Search size={20} />
             Sonuçları Göster

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useTheme } from '../components/ThemeContext';
 import { MapPin, Phone, Mail, Clock, Building, Users, Award, MessageCircle, ArrowRight, Plus } from 'lucide-react';
@@ -14,7 +15,7 @@ export const Offices = () => {
       <div className="container mx-auto px-4">
         
         {/* Banner: Open Your Office */}
-        <div className="mt-8 mb-16 bg-gradient-to-r from-gray-900 to-dies-blue rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-2xl">
+        <div className="mt-8 mb-16 bg-gradient-to-r from-gray-900 to-dies-blue rounded-3xl p-6 md:p-12 relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div>
@@ -29,7 +30,7 @@ export const Offices = () => {
                 </div>
                 <Link 
                     to="/ofis-basvuru" 
-                    className="flex-shrink-0 bg-white text-dies-blue hover:bg-dies-red hover:text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 group"
+                    className="w-full md:w-auto text-center flex-shrink-0 bg-white text-dies-blue hover:bg-dies-red hover:text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 group"
                 >
                     Ofis Açmak İstiyorum <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </Link>
@@ -96,7 +97,7 @@ export const Offices = () => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-2">
                         {/* Info Content */}
-                        <div className="p-8 md:p-10 flex flex-col justify-center">
+                        <div className="p-6 md:p-10 flex flex-col justify-center">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100">
                                         <DiesLogoIcon className="h-10 w-auto object-contain" />
@@ -126,7 +127,7 @@ export const Offices = () => {
                         </div>
 
                         {/* Contact Details Column */}
-                        <div className={`p-8 md:p-10 border-t lg:border-t-0 lg:border-l ${theme === 'dark' ? 'border-zinc-800 bg-zinc-800/30' : 'border-gray-100 bg-gray-50'}`}>
+                        <div className={`p-6 md:p-10 border-t lg:border-t-0 lg:border-l ${theme === 'dark' ? 'border-zinc-800 bg-zinc-800/30' : 'border-gray-100 bg-gray-50'}`}>
                             <h3 className={`text-lg font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-dies-blue'}`}>İletişim Bilgileri</h3>
                             
                             <div className="space-y-6">
