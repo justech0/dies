@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('dies_user');
-    window.location.href = '/';
+    // Navigation is now handled by the component calling logout to prevent "Location.assign" errors in sandbox
   };
 
   return (

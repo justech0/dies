@@ -1,3 +1,6 @@
+
+
+
 export interface Property {
   id: number;
   title: string;
@@ -29,6 +32,7 @@ export interface Property {
   isFurnished?: boolean;
   isInComplex?: boolean; // Site içerisinde mi
   balconyCount?: number;
+  hasBalcony?: boolean; // New field
 }
 
 export interface Advisor {
@@ -39,6 +43,7 @@ export interface Advisor {
   image: string;
   isFounder?: boolean;
   about?: string;
+  specializations?: string[]; // New field
   sahibindenLink?: string;
   social?: {
     instagram?: string;
@@ -61,6 +66,54 @@ export interface User {
   type: 'admin' | 'advisor' | 'user';
   role: 'admin' | 'advisor' | 'user'; // Normalized to role
   email: string;
+  phone?: string;
+  image?: string;
+  instagram?: string;
+  facebook?: string;
+}
+
+export interface Office {
+  id: number;
+  name: string;
+  address: string;
+  phone: string;
+  phone2?: string; // New field
+  whatsapp?: string;
+  image: string; // Main exterior image
+  gallery?: string[];
+  locationUrl?: string; // Google Maps Link
+  workingHours: string;
+  isHeadquarters: boolean;
+  city: string;
+  district: string;
+  description?: string; // New field for About Office
+}
+
+export interface OfficeApplication {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate: string;
+  profession: string;
+  city: string;
+  education: string;
+  date: string;
+  status: 'pending' | 'reviewed' | 'approved' | 'rejected';
+}
+
+export interface AdvisorApplication {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate?: string;
+  education?: string;
+  experience?: string; // 'Evet' | 'Hayır'
+  date: string;
+  status: 'pending' | 'reviewed' | 'approved' | 'rejected';
 }
 
 export interface FilterState {
@@ -84,4 +137,11 @@ export interface LocationData {
   [city: string]: {
     [district: string]: string[]; // Neighborhoods
   }
+}
+
+export interface SiteSettings {
+    heroImage: string;
+    heroTitle: string;
+    showFeatured: boolean;
+    featuredIds: number[];
 }

@@ -1,50 +1,26 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'dark' | 'light';
-
+// Simplified Theme Context - Always 'brand' mode (No dark/black mode)
 interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
+  isDark: boolean; // Kept for interface compatibility but will always be false
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem('dies-theme');
-    return (savedTheme as Theme) || 'dark';
-  });
-
+  // We enforce the light/brand theme structure defined in CSS
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('dark', 'light');
-    root.classList.add(theme);
-    localStorage.setItem('dies-theme', theme);
-    
-    if (theme === 'light') {
-        document.body.style.backgroundColor = '#f3f4f6'; 
-        document.body.style.color = '#111827'; 
-    } else {
-        document.body.style.backgroundColor = '#0a0a0a';
-        document.body.style.color = '#ffffff';
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
+    document.body.style.backgroundColor = '#F0F4F8';
+    document.body.style.color = '#001e3c';
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDark: false }}>
       {children}
     </ThemeContext.Provider>
   );
 };
 
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  return { isDark: false, theme: 'light', toggleTheme: () => {} };
 };

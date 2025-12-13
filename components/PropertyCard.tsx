@@ -1,16 +1,16 @@
+
 import React from 'react';
+// @ts-ignore
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Bed, Bath, Square, CheckCircle, Flame, Armchair, Building } from 'lucide-react';
+import { MapPin, Bed, Bath, Square, CheckCircle } from 'lucide-react';
 import { Property } from '../types';
 import { MOCK_ADVISORS } from '../services/mockData';
-import { useTheme } from './ThemeContext';
 
 interface PropertyCardProps {
   property: Property;
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
-  const { theme } = useTheme();
   const navigate = useNavigate();
   const advisor = MOCK_ADVISORS.find(a => a.id === property.advisorId);
 
@@ -20,7 +20,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
   const isSold = property.type === 'Satıldı' || property.type === 'Kiralandı';
 
-  // Aggregate key features for display
   const displayFeatures = [
     property.heatingType,
     property.isFurnished ? 'Eşyalı' : undefined,
@@ -32,34 +31,43 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   return (
     <div 
         onClick={handleClick}
-        className={`group cursor-pointer rounded-xl overflow-hidden border transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full relative hover:shadow-2xl ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800 hover:border-dies-red/50' : 'bg-white border-gray-100 hover:border-dies-red/50 shadow-md'}`}
+        className="group cursor-pointer bg-white rounded-xl overflow-hidden shadow-soft hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full relative"
     >
+      {/* Top Banner Stripe */}
+      <div className={`h-1 w-full ${property.type === 'Satılık' ? 'bg-dies-red' : 'bg-dies-blue'}`}></div>
+
       {/* Image */}
       <div className="relative h-64 overflow-hidden">
         <img 
             src={property.image} 
             alt={property.title} 
-            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${isSold ? 'grayscale' : ''}`}
+            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${isSold ? 'grayscale' : ''}`}
         />
+        
+        {/* Status Badge */}
         <div className="absolute top-4 left-4">
-            <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider text-white rounded shadow-lg ${
-                property.type === 'Satılık' ? 'bg-dies-red' : 
-                property.type === 'Kiralık' ? 'bg-blue-600' : 
+            <span className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white rounded-lg shadow-md backdrop-blur-sm ${
+                property.type === 'Satılık' ? 'bg-dies-red/90' : 
+                property.type === 'Kiralık' ? 'bg-dies-blue/90' : 
+                property.type === 'Satıldı' ? 'bg-gray-900/95 border border-white/20' :
                 'bg-gray-800'
             }`}>
                 {property.type}
             </span>
         </div>
+
+        {/* Price Tag Overlay */}
         {!isSold && (
-            <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/90 to-transparent">
-                <div className="text-white font-bold text-xl">
+            <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
+                <div className="text-dies-blue font-extrabold text-lg">
                     {property.price.toLocaleString('tr-TR')} {property.currency}
                 </div>
             </div>
         )}
+
         {isSold && (
-             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                <div className="text-white text-3xl font-black uppercase -rotate-12 border-4 border-white px-4 py-2">
+             <div className="absolute inset-0 flex items-center justify-center bg-dies-blue/40 backdrop-blur-[1px]">
+                <div className="text-white text-3xl font-black uppercase -rotate-12 border-4 border-white px-6 py-2 rounded-lg shadow-2xl bg-black/20">
                     {property.type.toUpperCase()}
                 </div>
              </div>
@@ -67,67 +75,60 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       </div>
 
       {/* Content */}
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex items-start justify-between mb-2">
-             <span className="text-xs text-gray-500 uppercase tracking-wide">{property.category}</span>
-             <span className="text-xs text-gray-500">{property.date}</span>
+      <div className="p-6 flex flex-col flex-grow">
+        <div className="flex items-center justify-between mb-3">
+             <span className="text-xs font-bold text-dies-red uppercase tracking-wide bg-red-50 px-2 py-1 rounded">{property.category}</span>
+             <span className="text-xs text-dies-slate flex items-center gap-1">
+                 {property.district}, {property.province}
+             </span>
         </div>
-        <h3 className={`font-bold text-lg mb-2 leading-tight transition-colors line-clamp-2 ${theme === 'dark' ? 'text-white group-hover:text-dies-red' : 'text-gray-900 group-hover:text-dies-red'}`}>
+        
+        <h3 className="font-bold text-lg mb-4 leading-snug text-dies-dark group-hover:text-dies-blue transition-colors line-clamp-2">
             {property.title}
         </h3>
-        <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-            <MapPin size={14} className="text-dies-red" />
-            <span className="truncate">{property.location} {property.district && `- ${property.district}`}</span>
-        </div>
 
-        {/* Basic Specs */}
-        <div className={`flex items-center justify-between border-t py-4 ${theme === 'dark' ? 'border-zinc-800' : 'border-gray-100'}`}>
-            <div className="flex items-center gap-3">
-                {property.bedrooms && (
-                    <div className="flex items-center gap-1 text-gray-500 text-xs" title="Yatak Odası">
-                        <Bed size={14} />
-                        <span>{property.bedrooms}</span>
-                    </div>
-                )}
-                {property.bathrooms !== undefined && property.bathrooms > 0 && (
-                    <div className="flex items-center gap-1 text-gray-500 text-xs" title="Banyo">
-                        <Bath size={14} />
-                        <span>{property.bathrooms}</span>
-                    </div>
-                )}
-                <div className="flex items-center gap-1 text-gray-500 text-xs" title="Alan">
-                    <Square size={14} />
-                    <span>{property.area} m²</span>
+        {/* Key Metrics */}
+        <div className="flex items-center gap-4 text-sm text-dies-slate mb-5 pb-5 border-b border-gray-100">
+            {property.bedrooms && (
+                <div className="flex items-center gap-1.5" title="Yatak Odası">
+                    <Bed size={16} className="text-dies-blue" />
+                    <span className="font-medium">{property.bedrooms}</span>
                 </div>
+            )}
+            {property.bathrooms !== undefined && property.bathrooms > 0 && (
+                <div className="flex items-center gap-1.5" title="Banyo">
+                    <Bath size={16} className="text-dies-blue" />
+                    <span className="font-medium">{property.bathrooms}</span>
+                </div>
+            )}
+            <div className="flex items-center gap-1.5" title="Alan">
+                <Square size={16} className="text-dies-blue" />
+                <span className="font-medium">{property.area} m²</span>
             </div>
         </div>
         
-        {/* Features Preview Section */}
-        {displayFeatures.length > 0 && (
-             <div className="mb-4">
-                 <div className="flex flex-wrap gap-2 h-16 overflow-hidden content-start">
-                     {displayFeatures.slice(0, 5).map((f, i) => (
-                         <span key={i} className={`text-[10px] px-2 py-1 rounded-full flex items-center gap-1 border ${theme === 'dark' ? 'bg-zinc-800 border-zinc-700 text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                             <CheckCircle size={10} className="text-dies-red" /> {f}
-                         </span>
-                     ))}
-                     {displayFeatures.length > 5 && (
-                         <span className="text-[10px] text-gray-500 mt-1 flex items-center">+{displayFeatures.length - 5} daha</span>
-                     )}
-                 </div>
-             </div>
-        )}
+        {/* Features Chips */}
+        <div className="mb-4 flex flex-wrap gap-2 h-14 overflow-hidden content-start">
+             {displayFeatures.slice(0, 4).map((f, i) => (
+                 <span key={i} className="text-[10px] px-2 py-1 rounded-full flex items-center gap-1 bg-gray-50 text-gray-600 border border-gray-100">
+                     <CheckCircle size={10} className="text-dies-blue" /> {f}
+                 </span>
+             ))}
+        </div>
 
         {/* Advisor Footer */}
-        <div className={`flex items-center justify-between pt-4 border-t mt-auto ${theme === 'dark' ? 'border-zinc-800' : 'border-gray-100'}`}>
-             <div className="flex items-center gap-2">
-                <img src={advisor?.image} alt={advisor?.name} className="w-8 h-8 rounded-full object-cover border border-gray-500" />
+        <div className="flex items-center justify-between mt-auto pt-2">
+             <div className="flex items-center gap-3">
+                <img src={advisor?.image} alt={advisor?.name} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" />
                 <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 uppercase">Danışman</span>
-                    <span className={`text-xs font-medium truncate max-w-[150px] ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wide">Danışman</span>
+                    <span className="text-xs font-bold text-dies-dark truncate max-w-[140px]">
                         {advisor?.name}
                     </span>
                 </div>
+             </div>
+             <div className="h-8 w-8 rounded-full bg-dies-light flex items-center justify-center text-dies-blue group-hover:bg-dies-blue group-hover:text-white transition-colors">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
              </div>
         </div>
       </div>

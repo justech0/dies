@@ -1,24 +1,19 @@
 import React from 'react';
 
+// LOGO UPDATE:
+// Bu bileşen artık projenizin 'public' klasöründeki 'logo.png' dosyasını çeker.
+// Logonuzu değiştirmek için proje ana dizinindeki public klasörüne 'logo.png' isminde dosyanızı atmanız yeterlidir.
 export const DiesLogoIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 64 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    {/* Left Roof - Red */}
-    <path d="M4 28L22 8L40 28" stroke="#D90429" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
-    
-    {/* Chimney on Left Roof (Red) */}
-    <path d="M10 20V10" stroke="#D90429" strokeWidth="4" strokeLinecap="round"/>
-
-    {/* Right Roof - CurrentColor - Slightly offset to right and back */}
-    <path d="M30 22L46 6L62 22" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
-    
-    {/* Windows (4 squares) - Centered under left roof area */}
-    {/* Top Row */}
-    <rect x="17" y="32" width="4" height="4" fill="currentColor" />
-    <rect x="23" y="32" width="4" height="4" fill="currentColor" />
-    {/* Bottom Row */}
-    <rect x="17" y="38" width="4" height="4" fill="currentColor" />
-    <rect x="23" y="38" width="4" height="4" fill="currentColor" />
-  </svg>
+  <img 
+    src="/logo.png" 
+    alt="Dies Gayrimenkul" 
+    className={`object-contain ${className}`}
+    onError={(e) => {
+      // Eğer logo yüklenemezse (dosya yoksa) geçici bir metin gösterir veya varsayılan bir imaj kullanır
+      e.currentTarget.style.display = 'none';
+      // Yedek metin gösterimi parent element tarafından yönetilebilir veya buraya fallback eklenebilir.
+    }}
+  />
 );
 
 export const LoadingSpinner = () => (

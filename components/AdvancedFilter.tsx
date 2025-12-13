@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Filter, Search, MapPin } from 'lucide-react';
-import { useTheme } from './ThemeContext';
+import { Filter, Search, RotateCcw } from 'lucide-react';
 import { TURKEY_LOCATIONS } from '../services/mockData';
 
 interface FilterProps {
@@ -8,8 +7,7 @@ interface FilterProps {
 }
 
 export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
-  const { theme } = useTheme();
-  const [filters, setFilters] = useState({
+  const initialFilters = {
     status: 'Tümü',
     type: 'Tümü',
     province: '',
@@ -23,12 +21,12 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
     heatingType: 'Tümü',
     buildingAge: 'Tümü',
     isFurnished: 'Tümü'
-  });
+  };
+
+  const [filters, setFilters] = useState(initialFilters);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
-    // Reset child locations if parent changes
     if (name === 'province') {
         setFilters({ ...filters, province: value, district: '', neighborhood: '' });
     } else if (name === 'district') {
@@ -43,29 +41,27 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
     onFilter(filters);
   };
 
-  const inputClass = `w-full p-3 rounded-lg border transition-all focus:ring-2 focus:ring-dies-red outline-none 
-    ${theme === 'dark' 
-      ? 'bg-black/50 border-zinc-700 text-white placeholder-zinc-500' 
-      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm'}`;
+  const handleClear = () => {
+    setFilters(initialFilters);
+    onFilter(initialFilters);
+  };
 
-  const labelClass = `block text-xs font-bold uppercase tracking-wider mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`;
+  const inputClass = "w-full p-3 rounded-lg border border-gray-200 bg-gray-50 text-dies-dark font-medium placeholder-gray-400 focus:ring-2 focus:ring-dies-blue focus:bg-white focus:border-transparent outline-none transition-all";
+  const labelClass = "block text-xs font-bold uppercase tracking-wider mb-2 text-dies-slate";
 
-  // Helper for Locations
   const districts = filters.province ? Object.keys(TURKEY_LOCATIONS[filters.province] || {}) : [];
   const neighborhoods = (filters.province && filters.district) 
     ? TURKEY_LOCATIONS[filters.province][filters.district] 
     : [];
 
   return (
-    <form onSubmit={handleSubmit} className={`p-6 rounded-2xl shadow-xl ${theme === 'dark' ? 'bg-zinc-900/90 border border-zinc-800' : 'bg-white border border-gray-100'}`}>
-      <div className="flex items-center gap-2 mb-6 border-b pb-4 border-gray-700/20">
-        <Filter className="text-dies-red" size={20} />
-        <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Detaylı Filtreleme</h3>
+    <form onSubmit={handleSubmit} className="p-8 rounded-3xl shadow-soft bg-white border border-gray-100">
+      <div className="flex items-center gap-2 mb-8 pb-4 border-b border-gray-100">
+        <div className="p-2 bg-blue-50 rounded-lg text-dies-blue"><Filter size={20} /></div>
+        <h3 className="font-bold text-xl text-dies-dark">Detaylı Filtreleme</h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Row 1: Basic */}
         <div>
             <label className={labelClass}>İlan Durumu</label>
             <select name="status" value={filters.status} onChange={handleChange} className={inputClass}>
@@ -105,7 +101,6 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
             </select>
         </div>
 
-        {/* Row 2: Location */}
         <div>
             <label className={labelClass}>İl</label>
             <select name="province" value={filters.province} onChange={handleChange} className={inputClass}>
@@ -141,30 +136,37 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
             </select>
         </div>
 
-        {/* Row 3: Ranges & Specifics */}
         <div className="lg:col-span-2">
             <label className={labelClass}>Fiyat Aralığı (TL)</label>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
                 <input type="number" name="minPrice" value={filters.minPrice} onChange={handleChange} placeholder="Min" className={inputClass} />
                 <input type="number" name="maxPrice" value={filters.maxPrice} onChange={handleChange} placeholder="Max" className={inputClass} />
             </div>
         </div>
          <div className="lg:col-span-2">
             <label className={labelClass}>Metrekare (m²)</label>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
                 <input type="number" name="minArea" value={filters.minArea} onChange={handleChange} placeholder="Min" className={inputClass} />
                 <input type="number" name="maxArea" value={filters.maxArea} onChange={handleChange} placeholder="Max" className={inputClass} />
             </div>
         </div>
       </div>
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex justify-end gap-4">
+        <button 
+            type="button"
+            onClick={handleClear}
+            className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-4 rounded-xl font-bold transition-all w-full md:w-auto"
+        >
+            <RotateCcw size={20} />
+            Temizle
+        </button>
         <button 
             type="submit" 
-            className="flex items-center gap-2 bg-dies-red hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold transition-transform hover:scale-[1.02] shadow-lg w-full md:w-auto justify-center"
+            className="flex items-center justify-center gap-2 bg-dies-red hover:bg-red-700 text-white px-10 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl w-full md:w-auto"
         >
             <Search size={20} />
-            İlanları Filtrele
+            Sonuçları Göster
         </button>
       </div>
     </form>

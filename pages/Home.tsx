@@ -1,215 +1,211 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ArrowRight, Home as HomeIcon, TrendingUp, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
-import { MOCK_PROPERTIES, MOCK_ADVISORS } from '../services/mockData';
+import { Search, ArrowRight, Home as HomeIcon, TrendingUp, Shield } from 'lucide-react';
+import { MOCK_PROPERTIES, MOCK_ADVISORS, MOCK_SETTINGS } from '../services/mockData';
 import { PropertyCard } from '../components/PropertyCard';
+// @ts-ignore
 import { Link, useNavigate } from 'react-router-dom';
-import { useTheme } from '../components/ThemeContext';
+
+const MotionDiv = motion.div as any;
+const MotionForm = motion.form as any;
 
 export const Home = () => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  // Duplicate mock properties to demonstrate scrolling effect since we only have 3 items
-  const featuredProperties = [...MOCK_PROPERTIES, ...MOCK_PROPERTIES, ...MOCK_PROPERTIES]; 
+  
+  // Sort ALL properties by date (newest first)
+  const sortedProperties = [...MOCK_PROPERTIES].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  // Take the top 9 properties for the homepage (3 columns x 3 rows = 9 items)
+  const featuredProperties = sortedProperties.slice(0, 9);
+  
   const founders = MOCK_ADVISORS.filter(a => a.isFounder);
   const [searchTerm, setSearchTerm] = useState('');
   
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate(`/ilanlar?district=${searchTerm}`);
-  };
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-        const { current } = scrollContainerRef;
-        const scrollAmount = 350; // Card width + gap approximation
-        if (direction === 'left') {
-            current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        } else {
-            current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        }
-    }
   };
 
   return (
     <div className="w-full">
       {/* HERO SECTION */}
       <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden">
-        {/* Background Image with Parallax feel */}
         <div className="absolute inset-0 z-0">
             <img 
-                src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070" 
-                alt="Modern Architecture" 
-                className="w-full h-full object-cover object-center opacity-60"
+                src={MOCK_SETTINGS.heroImage} 
+                alt="Dies Emlak" 
+                className="w-full h-full object-cover object-center"
             />
-            <div className={`absolute inset-0 bg-gradient-to-b ${theme === 'dark' ? 'from-black/70 via-black/40 to-dies-black' : 'from-gray-900/60 via-gray-900/20 to-gray-50'}`}></div>
+            {/* Dark Navy Blue Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-dies-blue/90 via-dies-blue/60 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-dies-light to-transparent h-24 mt-auto"></div>
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 text-center">
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-            >
-                <h2 className="text-dies-red font-bold tracking-[0.2em] uppercase mb-4 text-sm md:text-base">Dies Emlak Gayrimenkul</h2>
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 leading-tight">
-                    Hayalinizdeki <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Yaşama Adım Atın</span>
-                </h1>
-                <p className="text-gray-200 max-w-2xl mx-auto mb-10 text-sm md:text-lg font-light">
-                    Güvenilir danışmanlık, geniş portföy ve profesyonel hizmet anlayışıyla gayrimenkul yatırımlarınıza değer katıyoruz.
-                </p>
-            </motion.div>
-
-            {/* Search Bar */}
-            <motion.form 
-                onSubmit={handleSearch}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="bg-white/10 backdrop-blur-md p-2 rounded-full max-w-3xl mx-auto border border-white/20 flex flex-col md:flex-row gap-2 shadow-2xl"
-            >
-                <div className="flex-grow px-6 py-3 flex items-center">
-                    <Search className="text-gray-300 mr-3" />
-                    <input 
-                        type="text" 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Konum, proje veya ilan no arayın..." 
-                        className="bg-transparent border-none outline-none text-white placeholder-gray-300 w-full"
-                    />
-                </div>
-                <button 
-                    type="submit"
-                    className="bg-dies-red hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold transition-all uppercase tracking-wide text-sm md:text-base"
+        <div className="relative z-10 container mx-auto px-4">
+            <div className="max-w-3xl">
+                <MotionDiv
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8 }}
                 >
-                    İlan Ara
-                </button>
-            </motion.form>
+                    <div className="inline-flex items-center gap-2 px-4 py-1 mb-6 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                        <span className="w-2 h-2 rounded-full bg-dies-red"></span>
+                        <h2 className="text-white font-bold tracking-widest uppercase text-xs">Dies Gayrimenkul</h2>
+                    </div>
+                    <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-2xl">
+                        {MOCK_SETTINGS.heroTitle.split(' ').slice(0, 1)} <br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200">{MOCK_SETTINGS.heroTitle.split(' ').slice(1).join(' ')}</span>
+                    </h1>
+                    <p className="text-slate-100 text-lg md:text-xl font-medium mb-10 max-w-2xl leading-relaxed drop-shadow-md">
+                        Batman'ın en prestijli portföyü ve uzman kadrosu ile gayrimenkul süreçlerinizi güvenle yönetiyoruz.
+                    </p>
+                </MotionDiv>
+
+                {/* Search Bar */}
+                <MotionForm 
+                    onSubmit={handleSearch}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="bg-white p-2 rounded-full shadow-2xl flex flex-col md:flex-row gap-2 max-w-2xl"
+                >
+                    <div className="flex-grow px-6 py-4 flex items-center">
+                        <Search className="text-dies-blue mr-3" />
+                        <input 
+                            type="text" 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Konum, proje veya ilan no arayın..." 
+                            className="bg-transparent border-none outline-none text-dies-dark placeholder-gray-400 w-full font-medium"
+                        />
+                    </div>
+                    <button 
+                        type="submit"
+                        className="bg-dies-red hover:bg-red-700 text-white px-10 py-4 rounded-full font-bold transition-all shadow-lg uppercase tracking-wide text-sm"
+                    >
+                        ARA
+                    </button>
+                </MotionForm>
+            </div>
         </div>
       </section>
 
-      {/* FEATURED LISTINGS (Carousel) */}
-      <section className={`py-20 ${theme === 'dark' ? 'bg-dies-black' : 'bg-gray-50'}`}>
-        <div className="container mx-auto px-4">
-            <div className="flex justify-between items-end mb-8">
-                <div>
-                    <h2 className={`text-3xl md:text-4xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Öne Çıkan <span className="text-dies-red">İlanlar</span></h2>
-                    <p className="text-gray-500">En yeni ve en popüler portföylerimizi inceleyin.</p>
-                </div>
-                
-                {/* Carousel Controls */}
-                <div className="flex items-center gap-4">
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => scroll('left')}
-                            className={`p-3 rounded-full border transition-all ${theme === 'dark' ? 'border-zinc-700 hover:bg-zinc-800 text-white' : 'border-gray-300 hover:bg-white text-black hover:shadow-md'}`}
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-                        <button 
-                            onClick={() => scroll('right')}
-                            className={`p-3 rounded-full border transition-all ${theme === 'dark' ? 'border-zinc-700 hover:bg-zinc-800 text-white' : 'border-gray-300 hover:bg-white text-black hover:shadow-md'}`}
-                        >
-                            <ChevronRight size={20} />
-                        </button>
+      {/* FEATURED LISTINGS - GRID LAYOUT */}
+      {featuredProperties.length > 0 && (
+          <section className="py-24 bg-dies-light">
+            <div className="container mx-auto px-4">
+                <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+                    <div>
+                        <h2 className="text-4xl font-extrabold text-dies-dark mb-3">
+                            Öne Çıkan <span className="text-dies-blue">Fırsatlar</span>
+                        </h2>
+                        <p className="text-dies-slate text-lg">Portföyümüzdeki en güncel ve seçkin ilanlar.</p>
                     </div>
-                    <Link to="/ilanlar" className={`hidden md:flex items-center gap-2 font-medium hover:text-dies-red transition-colors ml-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        Tümünü Gör <ArrowRight size={20} />
+                    
+                    <Link to="/ilanlar" className="px-6 py-3 bg-white text-dies-blue font-bold rounded-full shadow-sm border border-gray-100 hover:shadow-md hover:text-dies-red transition-all flex items-center gap-2">
+                        Tüm İlanları Gör <ArrowRight size={18} />
                     </Link>
                 </div>
+                
+                {/* 3 Columns Grid for 3x3 layout (9 items) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {featuredProperties.map((prop, index) => (
+                        <MotionDiv 
+                            key={`${prop.id}-${index}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.1 }}
+                            className="h-full"
+                        >
+                            <PropertyCard property={prop} />
+                        </MotionDiv>
+                    ))}
+                </div>
             </div>
-            
-            {/* Scroll Container */}
-            <div 
-                ref={scrollContainerRef}
-                className="flex gap-6 overflow-x-auto pb-8 snap-x scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-                {featuredProperties.map((prop, index) => (
-                    <div key={`${prop.id}-${index}`} className="min-w-[85vw] md:min-w-[350px] lg:min-w-[380px] snap-center">
-                        <PropertyCard property={prop} />
+          </section>
+      )}
+
+      {/* VALUES */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                    { icon: Shield, title: "Güvenilir Hizmet", desc: "Şeffaf süreç yönetimi ve kurumsal yaklaşım." },
+                    { icon: HomeIcon, title: "Geniş Portföy", desc: "Her bütçeye uygun zengin gayrimenkul seçenekleri." },
+                    { icon: TrendingUp, title: "Yüksek Kazanç", desc: "Doğru fiyatlandırma ve stratejik yatırım danışmanlığı." }
+                ].map((item, idx) => (
+                    <div key={idx} className="group p-8 rounded-2xl bg-dies-light hover:bg-white border border-transparent hover:border-gray-100 hover:shadow-xl transition-all duration-300">
+                        <div className="w-16 h-16 rounded-2xl bg-white shadow-md flex items-center justify-center mb-6 group-hover:scale-110 transition-transform border border-gray-50">
+                            <item.icon className="text-dies-blue w-8 h-8" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-dies-dark mb-3">{item.title}</h3>
+                        <p className="text-dies-slate leading-relaxed">{item.desc}</p>
                     </div>
                 ))}
             </div>
-
-            <div className="mt-4 text-center md:hidden">
-                <Link to="/ilanlar" className="inline-flex items-center gap-2 text-white bg-zinc-800 px-6 py-3 rounded-lg hover:bg-zinc-700">
-                    Tüm İlanları Gör <ArrowRight size={18} />
-                </Link>
-            </div>
         </div>
       </section>
 
-      {/* STATS / FEATURES */}
-      <section className={`py-16 border-y ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200'}`}>
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className={`flex flex-col items-center text-center p-6 rounded-2xl border hover:border-dies-red/30 transition-colors group ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-200 shadow-sm'}`}>
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${theme === 'dark' ? 'bg-black' : 'bg-white shadow-md'}`}>
-                    <Shield className="text-dies-red w-8 h-8" />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Güvenilir Danışmanlık</h3>
-                <p className="text-gray-500 text-sm">Sektörde yılların verdiği tecrübe ile şeffaf ve dürüst hizmet.</p>
-            </div>
-            <div className={`flex flex-col items-center text-center p-6 rounded-2xl border hover:border-dies-red/30 transition-colors group ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-200 shadow-sm'}`}>
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${theme === 'dark' ? 'bg-black' : 'bg-white shadow-md'}`}>
-                    <HomeIcon className="text-dies-red w-8 h-8" />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Geniş Portföy</h3>
-                <p className="text-gray-500 text-sm">Her bütçeye ve ihtiyaca uygun yüzlerce konut ve ticari seçenek.</p>
-            </div>
-            <div className={`flex flex-col items-center text-center p-6 rounded-2xl border hover:border-dies-red/30 transition-colors group ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-200 shadow-sm'}`}>
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${theme === 'dark' ? 'bg-black' : 'bg-white shadow-md'}`}>
-                    <TrendingUp className="text-dies-red w-8 h-8" />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Doğru Yatırım</h3>
-                <p className="text-gray-500 text-sm">Piyasa analizi ve uzman görüşleri ile kazançlı yatırım fırsatları.</p>
-            </div>
-        </div>
-      </section>
+      {/* FOUNDERS / TEAM */}
+      <section className="py-24 bg-dies-blue text-white relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-dies-red/20 rounded-full blur-[80px] pointer-events-none"></div>
 
-      {/* FOUNDERS / TEAM TEASER */}
-      <section className={`py-20 relative overflow-hidden ${theme === 'dark' ? 'bg-zinc-900' : 'bg-white'}`}>
-        <div className={`absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l pointer-events-none ${theme === 'dark' ? 'from-black/50 to-transparent' : 'from-gray-100/50 to-transparent'}`}></div>
-        <div className="container mx-auto px-4">
-             <h2 className={`text-3xl md:text-4xl font-bold text-center mb-16 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Kurucu <span className="text-dies-red">Ortaklar</span></h2>
+        <div className="container mx-auto px-4 relative z-10">
+             <div className="text-center mb-16">
+                 <h2 className="text-4xl md:text-5xl font-extrabold mb-4">Kurucu Ortaklar</h2>
+                 <p className="text-slate-300 text-lg max-w-2xl mx-auto">Sektörün öncü isimleri ile güvenilir yatırımın adresi.</p>
+             </div>
              
              <div className="flex flex-wrap justify-center gap-10">
-                {founders.map(founder => (
-                    <Link to={`/danisman/${founder.id}`} key={founder.id} className={`p-6 rounded-2xl border flex flex-col items-center w-full md:w-1/3 lg:w-1/4 hover:translate-y-[-10px] transition-transform duration-300 shadow-2xl shadow-dies-red/5 ${theme === 'dark' ? 'bg-black border-zinc-800' : 'bg-white border-gray-200 shadow-lg'}`}>
-                        <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-dies-red mb-6">
-                            <img src={founder.image} alt={founder.name} className="w-full h-full object-cover" />
-                        </div>
-                        <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{founder.name}</h3>
-                        <span className="text-dies-red text-xs uppercase font-bold tracking-wider my-2 text-center">{founder.role}</span>
-                        <p className="text-gray-500 text-lg font-mono">{founder.phone}</p>
-                        <div className="mt-4 bg-dies-red/10 text-dies-red px-4 py-1 rounded-full text-xs font-bold">
-                            Profili İncele
-                        </div>
+                {founders.map((founder, i) => (
+                    <Link to={`/danisman/${founder.id}`} key={founder.id}>
+                        <MotionDiv 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.2 }}
+                            className="group relative w-full md:w-96 bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:bg-white hover:border-white transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
+                        >
+                            <div className="w-36 h-36 mx-auto rounded-full p-1 bg-gradient-to-br from-dies-red to-dies-blue mb-6 group-hover:scale-105 transition-transform shadow-lg">
+                                <img src={founder.image} alt={founder.name} className="w-full h-full object-cover rounded-full border-4 border-white" />
+                            </div>
+                            <div className="text-center">
+                                <h3 className="text-2xl font-bold text-white group-hover:text-dies-dark mb-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis px-1">{founder.name}</h3>
+                                <p className="text-dies-red font-bold uppercase tracking-widest text-xs mb-6 bg-white/10 inline-block px-3 py-1 rounded-full group-hover:bg-dies-red/10 group-hover:text-dies-red transition-colors">{founder.role}</p>
+                                
+                                <div className="inline-block px-6 py-2 rounded-full border border-white/30 text-white text-sm font-bold group-hover:bg-dies-blue group-hover:border-dies-blue group-hover:text-white transition-all">
+                                    Profili İncele
+                                </div>
+                            </div>
+                        </MotionDiv>
                     </Link>
                 ))}
              </div>
         </div>
       </section>
 
-      {/* WHY JOIN BANNER */}
-      <section className="py-20 bg-gradient-to-r from-dies-red to-red-900 relative">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-10">
-            <div className="text-white max-w-xl">
-                <h2 className="text-3xl md:text-5xl font-extrabold mb-4">Kariyerine DİES ile Yön Ver</h2>
-                <p className="text-white/80 text-lg mb-8">
-                    Gayrimenkul sektöründe kendi işinin patronu ol, yüksek kazanç ve prestijli bir kariyer için aramıza katıl.
-                </p>
-                <Link to="/danisman-ol" className="bg-white text-dies-red px-8 py-4 rounded-lg font-bold shadow-lg hover:shadow-xl hover:bg-gray-100 transition-all inline-flex items-center gap-2">
-                    Başvuru Formu <ArrowRight size={20} />
-                </Link>
-            </div>
-            <div className="hidden md:block">
-                 {/* Abstract graphic or image */}
-                 <div className="w-64 h-64 bg-white/10 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/30">
-                    <span className="text-6xl font-black text-white/90">DİES</span>
-                 </div>
+      {/* CTA */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+            <div className="bg-dies-light rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10 shadow-inner border border-gray-100">
+                <div className="max-w-xl">
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-dies-dark mb-4">Ekibimize Katılın</h2>
+                    <p className="text-dies-slate text-lg mb-8">
+                        Gayrimenkul sektöründe kariyer hedefliyor ve yüksek kazanç elde etmek istiyorsanız, Dies ailesi sizi bekliyor.
+                    </p>
+                    <Link to="/danisman-ol" className="inline-flex items-center gap-2 bg-dies-blue text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-900 transition-all shadow-lg hover:shadow-xl">
+                        Başvuru Yap <ArrowRight size={20} />
+                    </Link>
+                </div>
+                <div className="hidden md:block">
+                     <div className="w-48 h-48 bg-white rounded-full flex items-center justify-center shadow-2xl border-8 border-white">
+                        <HomeIcon className="text-dies-blue w-20 h-20" />
+                     </div>
+                </div>
             </div>
         </div>
       </section>

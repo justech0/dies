@@ -1,9 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../components/ThemeContext';
 import { CheckCircle, Lock, X, Image as ImageIcon, Loader, ArrowRight, UploadCloud, RefreshCw } from 'lucide-react';
 import { useAuth } from '../components/AuthContext';
+// @ts-ignore
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { TURKEY_LOCATIONS } from '../services/mockData';
+import { TURKEY_LOCATIONS, MOCK_PROPERTIES } from '../services/mockData';
 import { Property } from '../types';
 
 export const CreateListing = () => {
@@ -31,19 +33,21 @@ export const CreateListing = () => {
       district: '',
       neighborhood: ''
   });
+
+  // Features State
+  const availableFeatures = [
+      "Çelik Kapı", "Parke Zemin", "Duşakabin", "Ebeveyn Banyosu", 
+      "Asansör", "Balkon", "Isı Yalıtımı", "Kablo TV", "Uydu", 
+      "Otopark", "Güvenlik", "Görüntülü Diafon", "Ankastre Mutfak",
+      "Kiler", "Vestiyer", "Yangın Merdiveni", "Kapıcı"
+  ];
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-      // Fetch locations from backend if available
-      fetch('/api/locations.php')
-        .then(res => res.json())
-        .then(data => {
-            if(Object.keys(data).length > 0) {
-                setLocationsData(data);
-            }
-        })
-        .catch(err => console.log('Using default locations'));
+      // Using local mock data instead of fetch
+      setLocationsData(TURKEY_LOCATIONS);
   }, []);
 
   useEffect(() => {
@@ -61,6 +65,9 @@ export const CreateListing = () => {
             : (editingProperty.image ? [editingProperty.image] : []);
           
           setPreviews(existingImages);
+
+          // Pre-fill features
+          setSelectedFeatures(editingProperty.features || []);
       }
   }, [editingProperty]);
 
@@ -69,11 +76,11 @@ export const CreateListing = () => {
       return (
           <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 pt-20">
               <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-6">
-                  <Lock className="text-dies-red w-10 h-10" />
+                  <Lock className="text-dies-blue w-10 h-10" />
               </div>
               <h2 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Giriş Yapmanız Gerekiyor</h2>
               <div className="flex gap-4">
-                  <Link to="/giris" className="bg-dies-red text-white px-8 py-3 rounded-full font-bold hover:bg-red-700 transition-colors">
+                  <Link to="/giris" className="bg-dies-blue text-white px-8 py-3 rounded-full font-bold hover:bg-blue-800 transition-colors">
                       Giriş Yap
                   </Link>
               </div>
@@ -81,15 +88,8 @@ export const CreateListing = () => {
       );
   }
 
-  // --- Image Compression Logic ---
+  // --- Image Compression Logic (WebP Conversion) ---
   const compressImage = async (file: File): Promise<File> => {
-    // 10MB Limit
-    const MAX_SIZE = 10 * 1024 * 1024; 
-    
-    if (file.size <= MAX_SIZE) {
-        return file;
-    }
-
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.src = URL.createObjectURL(file);
@@ -99,7 +99,7 @@ export const CreateListing = () => {
             let height = img.height;
             
             // Resize logic to keep max dimension reasonable
-            const MAX_DIMENSION = 2500;
+            const MAX_DIMENSION = 1920;
             if (width > height) {
                 if (width > MAX_DIMENSION) {
                     height *= MAX_DIMENSION / width;
@@ -121,17 +121,20 @@ export const CreateListing = () => {
             }
             ctx.drawImage(img, 0, 0, width, height);
             
+            // Convert to WebP
             canvas.toBlob((blob) => {
                 if (!blob) {
                     resolve(file);
                     return;
                 }
-                const compressedFile = new File([blob], file.name, {
-                    type: 'image/jpeg',
+                // Change extension to .webp
+                const newName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+                const compressedFile = new File([blob], newName, {
+                    type: 'image/webp',
                     lastModified: Date.now(),
                 });
                 resolve(compressedFile);
-            }, 'image/jpeg', 0.8); // 80% quality
+            }, 'image/webp', 0.75); // 75% quality webp
         };
         img.onerror = (err) => reject(err);
     });
@@ -162,6 +165,14 @@ export const CreateListing = () => {
       if (e.target.files) {
           const newFiles = Array.from(e.target.files) as File[];
           processFiles(newFiles);
+      }
+  };
+
+  const handleFeatureToggle = (feature: string) => {
+      if (selectedFeatures.includes(feature)) {
+          setSelectedFeatures(prev => prev.filter(f => f !== feature));
+      } else {
+          setSelectedFeatures(prev => [...prev, feature]);
       }
   };
 
@@ -202,8 +213,6 @@ export const CreateListing = () => {
           const imageIndex = indexToRemove - existingCount;
           setImages(prev => prev.filter((_, i) => i !== imageIndex));
       }
-      // If it's an existing image, we just remove from previews. 
-      // In a real app, you might want to add it to a 'deletedImages' array to send to backend.
   };
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -219,6 +228,13 @@ export const CreateListing = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check Max Listing Count (30)
+    if (MOCK_PROPERTIES.length >= 30 && !editingProperty) {
+        alert("Maksimum ilan sayısına (30) ulaşıldı. Yeni ilan ekleyemezsiniz.");
+        return;
+    }
+
     if (previews.length === 0) {
         alert("Lütfen en az bir fotoğraf yükleyin.");
         return;
@@ -227,56 +243,78 @@ export const CreateListing = () => {
     setIsLoading(true);
     setUploadProgress(0);
 
-    const formData = new FormData(e.target as HTMLFormElement);
-    images.forEach((file) => formData.append(`images[]`, file));
-    formData.append('user_id', user!.id.toString());
-    if (editingProperty) {
-        formData.append('id', editingProperty.id.toString());
-        formData.append('action', 'update');
-    } else {
-        formData.append('action', 'create');
-    }
-    
-    formData.append('province', locationState.province);
-    formData.append('district', locationState.district);
-    formData.append('neighborhood', locationState.neighborhood);
+    // Simulate progress
+    const interval = setInterval(() => {
+        setUploadProgress(prev => {
+            if (prev >= 100) {
+                clearInterval(interval);
+                return 100;
+            }
+            return prev + 10;
+        });
+    }, 200);
 
-    const xhr = new XMLHttpRequest();
-    xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-            const percentComplete = (event.loaded / event.total) * 100;
-            setUploadProgress(percentComplete);
-        }
-    };
+    // Mock Submission
+    setTimeout(() => {
+        clearInterval(interval);
+        
+        // --- Create New Property Object (Mock Logic) ---
+        // In a real app, form data would be sent to the backend.
+        // Here we just update the mock data locally for demo purposes.
+        
+        const form = e.target as HTMLFormElement;
+        const formData = new FormData(form);
+        
+        // Determine status: 'pending' if user is 'user', 'Satılık' (or as set) if admin/advisor
+        const initialType = (user?.role === 'user') ? 'pending' : 'Satılık';
 
-    xhr.onload = () => {
-        if (xhr.status === 200) {
-            try {
-                const result = JSON.parse(xhr.responseText);
-                if (result.success) {
-                    setCreatedId(result.id || editingProperty?.id);
-                    setSubmitted(true);
-                } else {
-                    alert("Hata: " + result.message);
-                }
-            } catch (e) {
-                // Mock success for demo if API fails
-                setCreatedId(editingProperty?.id || 101);
-                setSubmitted(true);
+        const newProperty: Property = {
+            id: editingProperty?.id || Math.floor(Math.random() * 10000) + 1000,
+            title: formData.get('title') as string,
+            price: Number(formData.get('price')),
+            currency: 'TL',
+            location: `${locationState.province}, ${locationState.district}`,
+            province: locationState.province,
+            district: locationState.district,
+            neighborhood: locationState.neighborhood,
+            type: initialType, // Use the logic here
+            category: formData.get('category') as any,
+            image: previews[0], // First image is cover
+            images: previews,
+            bedrooms: formData.get('bedrooms') as string,
+            bathrooms: 1, // Defaulting for demo
+            area: Number(formData.get('area')),
+            netArea: Number(formData.get('net_area')),
+            advisorId: user?.id || 0,
+            sahibindenLink: formData.get('sahibinden_link') as string,
+            description: formData.get('description') as string,
+            features: selectedFeatures,
+            date: new Date().toISOString().split('T')[0],
+            buildingAge: formData.get('building_age') as string,
+            heatingType: formData.get('heating_type') as string,
+            isFurnished: formData.get('is_furnished') === '1',
+            hasBalcony: selectedFeatures.includes('Balkon')
+        };
+
+        if (editingProperty) {
+            // Update existing
+            const index = MOCK_PROPERTIES.findIndex(p => p.id === editingProperty.id);
+            if (index !== -1) {
+                // If editing, keep original status unless it was pending and admin is editing?
+                // For simplicity, if admin edits, it stays what it is or goes live. 
+                // Let's keep it simple: edit preserves status, or sets to active if admin wants (not implemented here)
+                // Just update fields
+                MOCK_PROPERTIES[index] = { ...newProperty, type: editingProperty.type }; 
             }
         } else {
-            alert("Yükleme sırasında bir hata oluştu.");
+            // Add new
+            MOCK_PROPERTIES.push(newProperty);
         }
-        setIsLoading(false);
-    };
 
-    xhr.onerror = () => {
-        alert("Bağlantı hatası.");
+        setCreatedId(newProperty.id);
+        setSubmitted(true);
         setIsLoading(false);
-    };
-
-    xhr.open("POST", "/api/listings.php");
-    xhr.send(formData);
+    }, 2000);
   };
 
   if (isLoading && !submitted) {
@@ -285,7 +323,7 @@ export const CreateListing = () => {
               <div className="relative w-24 h-24 mb-6">
                  <svg className="w-full h-full" viewBox="0 0 100 100">
                     <circle className="text-gray-200 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
-                    <circle className="text-dies-red progress-ring__circle stroke-current" strokeWidth="8" strokeLinecap="round" cx="50" cy="50" r="40" fill="transparent" strokeDasharray={`${uploadProgress * 2.51} 251`}></circle>
+                    <circle className="text-dies-blue progress-ring__circle stroke-current" strokeWidth="8" strokeLinecap="round" cx="50" cy="50" r="40" fill="transparent" strokeDasharray={`${uploadProgress * 2.51} 251`}></circle>
                  </svg>
                  <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
                      {Math.round(uploadProgress)}%
@@ -293,10 +331,10 @@ export const CreateListing = () => {
               </div>
 
               <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>İlan {editingProperty ? 'Güncelleniyor' : 'Gönderiliyor'}...</h2>
-              <p className="text-gray-500 mb-6 text-center">Lütfen sayfayı kapatmayın.</p>
+              <p className="text-gray-500 mb-6 text-center">Fotoğraflar WebP formatına dönüştürülüyor...</p>
               
               <div className="w-full max-w-md bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
-                 <div className="bg-dies-red h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                 <div className="bg-dies-blue h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
               </div>
           </div>
       );
@@ -312,19 +350,28 @@ export const CreateListing = () => {
         <h2 className={`text-3xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>İşlem Başarılı!</h2>
         <p className="text-gray-500 max-w-md mb-8">
             İlanınız başarıyla {editingProperty ? 'güncellendi' : 'oluşturuldu'}.
+            {user?.role === 'user' && !editingProperty && <span className="block mt-2 font-bold text-dies-blue">İlanınız onay sürecine alınmıştır.</span>}
         </p>
         
-        <button 
-            onClick={() => navigate(`/ilan/${createdId}`)}
-            className="flex items-center gap-2 bg-dies-red text-white px-8 py-3 rounded-full font-bold hover:bg-red-700 transition-colors"
-        >
-            İlana Git <ArrowRight size={20} />
-        </button>
+        <div className="flex gap-4">
+            <button 
+                onClick={() => navigate(`/ilan/${createdId}`)}
+                className="bg-green-600 text-white px-8 py-3 rounded-full font-bold hover:bg-green-700 transition-colors"
+            >
+                İlanı Görüntüle
+            </button>
+            <button 
+                onClick={() => navigate(`/profil`)}
+                className="bg-gray-200 text-gray-800 px-8 py-3 rounded-full font-bold hover:bg-gray-300 transition-colors"
+            >
+                Profilime Dön
+            </button>
+        </div>
       </div>
     );
   }
 
-  const inputClass = `w-full p-3 rounded-lg border transition-all focus:ring-2 focus:ring-dies-red outline-none 
+  const inputClass = `w-full p-3 rounded-lg border transition-all focus:ring-2 focus:ring-dies-blue outline-none 
   ${theme === 'dark' 
     ? 'bg-black/50 border-zinc-700 text-white placeholder-zinc-500' 
     : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`;
@@ -396,12 +443,19 @@ export const CreateListing = () => {
                         <div>
                              <label className={labelClass}>Oda Sayısı</label>
                              <select name="bedrooms" defaultValue={editingProperty?.bedrooms} className={inputClass}>
+                                 <option>1+0 (Stüdyo)</option>
                                  <option>1+1</option>
                                  <option>2+1</option>
                                  <option>3+1</option>
                                  <option>4+1</option>
                                  <option>4.5+1</option>
                                  <option>5+1</option>
+                                 <option>5+2</option>
+                                 <option>6+1</option>
+                                 <option>6+2</option>
+                                 <option>7+1</option>
+                                 <option>8+1</option>
+                                 <option>Villa Tipi</option>
                              </select>
                         </div>
                     </div>
@@ -436,6 +490,27 @@ export const CreateListing = () => {
                              </select>
                         </div>
                     </div>
+
+                    {/* Features Selection */}
+                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <label className={`${labelClass} mb-4 text-lg`}>Daire Özellikleri</label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {availableFeatures.map(feature => (
+                                <label key={feature} className="flex items-center gap-2 cursor-pointer group">
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedFeatures.includes(feature) ? 'bg-dies-blue border-dies-blue' : 'bg-white border-gray-400 group-hover:border-dies-blue'}`}>
+                                        {selectedFeatures.includes(feature) && <CheckCircle size={14} className="text-white" />}
+                                    </div>
+                                    <input 
+                                        type="checkbox" 
+                                        className="hidden" 
+                                        checked={selectedFeatures.includes(feature)}
+                                        onChange={() => handleFeatureToggle(feature)}
+                                    />
+                                    <span className="text-sm text-gray-700">{feature}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
                     
                     <div>
                         <label className={labelClass}>Sahibinden Linki (Opsiyonel)</label>
@@ -448,29 +523,29 @@ export const CreateListing = () => {
                     </div>
                     
                     <div>
-                        <label className={labelClass}>Fotoğraflar</label>
+                        <label className={labelClass}>Fotoğraflar (Otomatik WebP Dönüştürme)</label>
                         <div 
                             onClick={() => !isCompressing && fileInputRef.current?.click()}
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
                             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 relative 
-                                ${theme === 'dark' ? 'border-zinc-700 hover:border-dies-red hover:bg-zinc-800' : 'border-gray-300 hover:border-dies-red hover:bg-gray-50'} 
+                                ${theme === 'dark' ? 'border-zinc-700 hover:border-dies-blue hover:bg-zinc-800' : 'border-gray-300 hover:border-dies-blue hover:bg-gray-50'} 
                                 ${isCompressing ? 'opacity-50 cursor-not-allowed' : ''}
-                                ${isDragging ? 'border-dies-red bg-dies-red/5 scale-[1.02]' : ''}
+                                ${isDragging ? 'border-dies-blue bg-dies-blue/5 scale-[1.02]' : ''}
                             `}
                         >
                             {isCompressing ? (
-                                <div className="flex flex-col items-center justify-center text-dies-red">
+                                <div className="flex flex-col items-center justify-center text-dies-blue">
                                     <RefreshCw className="animate-spin mb-2 w-10 h-10" />
                                     <p className="font-bold">Fotoğraflar İşleniyor...</p>
                                 </div>
                             ) : (
                                 <>
-                                    <UploadCloud className={`mx-auto mb-2 w-12 h-12 ${isDragging ? 'text-dies-red' : 'text-gray-400'}`} />
+                                    <UploadCloud className={`mx-auto mb-2 w-12 h-12 ${isDragging ? 'text-dies-blue' : 'text-gray-400'}`} />
                                     <p className="font-bold text-lg mb-1">Fotoğrafları Buraya Sürükleyin veya Seçin</p>
                                     <p className="text-gray-500 text-sm">JPG, PNG (Max 15 Fotoğraf)</p>
-                                    <p className="text-xs text-gray-400 mt-2">10MB üzeri görseller otomatik sıkıştırılır.</p>
+                                    <p className="text-xs text-gray-400 mt-2">Daha hızlı yükleme için otomatik WebP sıkıştırma.</p>
                                 </>
                             )}
                             <input disabled={isCompressing} ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
@@ -479,7 +554,7 @@ export const CreateListing = () => {
                         {previews.length > 0 && (
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6">
                                 {previews.map((src, i) => (
-                                    <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border-2 border-dies-red/50 bg-black/50">
+                                    <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border-2 border-dies-blue/50 bg-black/50">
                                         <img src={src} className="w-full h-full object-cover" alt={`Preview ${i}`} />
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                             <button type="button" onClick={() => removeImage(i)} className="bg-red-600 text-white p-2 rounded-full transform hover:scale-110 transition-transform">
@@ -487,7 +562,7 @@ export const CreateListing = () => {
                                             </button>
                                         </div>
                                         {i === 0 && (
-                                            <div className="absolute top-2 left-2 bg-dies-red text-white text-[10px] font-bold px-2 py-1 rounded">
+                                            <div className="absolute top-2 left-2 bg-dies-blue text-white text-[10px] font-bold px-2 py-1 rounded">
                                                 KAPAK
                                             </div>
                                         )}
@@ -497,7 +572,7 @@ export const CreateListing = () => {
                         )}
                     </div>
 
-                    <button disabled={isCompressing} type="submit" className={`w-full bg-dies-red text-white py-4 rounded-lg font-bold hover:bg-red-700 shadow-lg transform transition hover:scale-[1.01] flex items-center justify-center gap-2 ${isCompressing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <button disabled={isCompressing} type="submit" className={`w-full bg-dies-blue text-white py-4 rounded-lg font-bold hover:bg-blue-800 shadow-lg transform transition hover:scale-[1.01] flex items-center justify-center gap-2 ${isCompressing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                          <CheckCircle size={20} /> {editingProperty ? 'DEĞİŞİKLİKLERİ KAYDET' : 'İLANI YAYINLA'}
                     </button>
                 </div>
