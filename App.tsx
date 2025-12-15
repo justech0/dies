@@ -16,7 +16,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { Profile } from './pages/Profile';
 import { Offices } from './pages/Offices';
 import { Advisors } from './pages/Advisors';
-import { User, Lock, Mail, Phone, User as UserIcon, ArrowRight, Loader, Info, Copy } from 'lucide-react';
+import { Lock, Mail, Phone, User as UserIcon, ArrowRight, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_USERS } from './services/mockData';
 
@@ -67,7 +67,7 @@ const Login = () => {
                         navigate('/');
                     }
                 } else {
-                    setError('E-posta veya şifre hatalı. (Demo: admin123, user123...)');
+                    setError('E-posta veya şifre hatalı.');
                     setIsLoading(false);
                 }
             } else {
@@ -96,39 +96,9 @@ const Login = () => {
 
     return (
         <div className="pt-32 pb-20 flex justify-center px-4 min-h-[80vh] items-center bg-gray-50/50">
-            <div className="flex flex-col lg:flex-row gap-8 max-w-5xl w-full">
-                
-                {/* Credentials Info Box (For Demo) */}
-                <div className="lg:w-1/3 order-2 lg:order-1">
-                    <div className="bg-blue-900 text-white p-8 rounded-3xl shadow-xl h-full flex flex-col justify-center">
-                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <Info /> Demo Giriş Bilgileri
-                        </h3>
-                        <div className="space-y-6">
-                            <div className="bg-blue-800/50 p-4 rounded-xl border border-blue-700">
-                                <span className="text-xs font-bold text-blue-300 uppercase block mb-1">Yönetici (Tam Yetki)</span>
-                                <div className="font-mono text-sm">admin@dies.com</div>
-                                <div className="font-mono text-sm text-blue-200">admin123</div>
-                            </div>
-                            <div className="bg-blue-800/50 p-4 rounded-xl border border-blue-700">
-                                <span className="text-xs font-bold text-blue-300 uppercase block mb-1">Danışman (İlan Onay & İstatistik)</span>
-                                <div className="font-mono text-sm">advisor@dies.com</div>
-                                <div className="font-mono text-sm text-blue-200">advisor123</div>
-                            </div>
-                            <div className="bg-blue-800/50 p-4 rounded-xl border border-blue-700">
-                                <span className="text-xs font-bold text-blue-300 uppercase block mb-1">Normal Kullanıcı (İlan Ekleme)</span>
-                                <div className="font-mono text-sm">user@dies.com</div>
-                                <div className="font-mono text-sm text-blue-200">user123</div>
-                            </div>
-                        </div>
-                        <p className="mt-6 text-sm text-blue-200 opacity-80">
-                            Rolleri test etmek için yukarıdaki bilgileri kullanabilirsiniz.
-                        </p>
-                    </div>
-                </div>
-
+            <div className="w-full max-w-lg">
                 {/* Login Form */}
-                <div className="lg:w-2/3 w-full p-8 md:p-10 rounded-3xl bg-white shadow-soft border border-gray-100 order-1 lg:order-2">
+                <div className="w-full p-8 md:p-10 rounded-3xl bg-white shadow-soft border border-gray-100">
                     
                     <div className="text-center mb-8">
                         <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
