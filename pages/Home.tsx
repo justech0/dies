@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ArrowRight, Home as HomeIcon, TrendingUp, Shield } from 'lucide-react';
-import { MOCK_PROPERTIES, MOCK_ADVISORS, MOCK_SETTINGS } from '../services/mockData';
+import { api } from '../services/api';
+import { Property, Advisor } from '../types';
 import { PropertyCard } from '../components/PropertyCard';
 // @ts-ignore
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,19 +11,44 @@ import { Link, useNavigate } from 'react-router-dom';
 const MotionDiv = motion.div as any;
 const MotionForm = motion.form as any;
 
+const pageVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+};
+
 export const Home = () => {
   const navigate = useNavigate();
-  
-  // Sort ALL properties by date (newest first)
-  const sortedProperties = [...MOCK_PROPERTIES].sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
-  // Take the top 9 properties for the homepage (3 columns x 3 rows = 9 items)
-  const featuredProperties = sortedProperties.slice(0, 9);
-  
-  const founders = MOCK_ADVISORS.filter(a => a.isFounder);
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [founders, setFounders] = useState<Advisor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Default fallback settings in case API fails or not set yet
+  const [heroSettings, setHeroSettings] = useState({
+      heroImage: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070',
+      heroTitle: 'Yatırımlarınıza Değer Katıyoruz'
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+        try {
+            // 1. Fetch Featured Properties
+            const props = await api.properties.getList({ is_featured: 1 });
+            // Sort by date descending and take top 9
+            const sorted = props.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 9);
+            setFeaturedProperties(sorted);
+
+            // 2. Fetch Advisors (Filter for founders/leaders if API returns role info)
+            const allAdvisors = await api.advisors.getList();
+            const founderList = allAdvisors.filter(a => a.isFounder || a.role.includes('Kurucu') || a.role.includes('Broker'));
+            setFounders(founderList.length > 0 ? founderList : allAdvisors.slice(0, 3));
+
+        } catch (error) {
+            console.error("Failed to load home data", error);
+        }
+    };
+    fetchData();
+  }, []);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +56,18 @@ export const Home = () => {
   };
 
   return (
-    <div className="w-full">
+    <MotionDiv 
+        className="w-full"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+    >
       {/* HERO SECTION */}
       <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
             <img 
-                src={MOCK_SETTINGS.heroImage} 
+                src={heroSettings.heroImage} 
                 alt="Dies Emlak" 
                 className="w-full h-full object-cover object-center"
             />
@@ -56,8 +88,8 @@ export const Home = () => {
                         <h2 className="text-white font-bold tracking-widest uppercase text-xs">Dies Gayrimenkul</h2>
                     </div>
                     <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-2xl">
-                        {MOCK_SETTINGS.heroTitle.split(' ').slice(0, 1)} <br/>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200">{MOCK_SETTINGS.heroTitle.split(' ').slice(1).join(' ')}</span>
+                        {heroSettings.heroTitle.split(' ').slice(0, 1)} <br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200">{heroSettings.heroTitle.split(' ').slice(1).join(' ')}</span>
                     </h1>
                     <p className="text-slate-100 text-base md:text-xl font-medium mb-10 max-w-2xl leading-relaxed drop-shadow-md">
                         Batman'ın en prestijli portföyü ve uzman kadrosu ile gayrimenkul süreçlerinizi güvenle yönetiyoruz.
@@ -110,8 +142,8 @@ export const Home = () => {
                     </Link>
                 </div>
                 
-                {/* 2 Columns Grid for larger impact (as requested) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+                {/* Updated grid to 3 columns on large screens for standard sizing */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {featuredProperties.map((prop, index) => (
                         <MotionDiv 
                             key={`${prop.id}-${index}`}
@@ -210,6 +242,6 @@ export const Home = () => {
             </div>
         </div>
       </section>
-    </div>
+    </MotionDiv>
   );
 };

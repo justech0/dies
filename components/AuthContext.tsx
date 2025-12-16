@@ -1,4 +1,6 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../services/api';
 
 export interface User {
   id: number;
@@ -13,37 +15,51 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (userData: User) => void;
+  login: (userData: User, token?: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage for existing session
-    const storedUser = localStorage.getItem('dies_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const checkAuth = async () => {
+        const token = localStorage.getItem('dies_token');
+        if (token) {
+            try {
+                const userData = await api.auth.me();
+                setUser(userData);
+            } catch (error) {
+                console.error("Session expired or invalid", error);
+                localStorage.removeItem('dies_token');
+            }
+        }
+        setIsLoading(false);
+    };
+    checkAuth();
   }, []);
 
-  const login = (userData: User) => {
+  const login = (userData: User, token?: string) => {
     setUser(userData);
-    localStorage.setItem('dies_user', JSON.stringify(userData));
+    // If token is provided (fresh login), save it. 
+    // If updating profile (no token param), keep existing token.
+    if (token) {
+        localStorage.setItem('dies_token', token);
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('dies_user');
-    // Navigation is now handled by the component calling logout to prevent "Location.assign" errors in sandbox
+    localStorage.removeItem('dies_token');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

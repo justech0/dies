@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { CheckCircle, Briefcase, User, Mail, Phone, Calendar, BookOpen } from 'lucide-react';
-import { MOCK_ADVISOR_APPLICATIONS } from '../services/mockData';
-import { AdvisorApplication as AdvisorAppType } from '../types';
+import { CheckCircle, Briefcase, User, Mail, Phone, Calendar, BookOpen, Loader } from 'lucide-react';
+import { api } from '../services/api';
 
 export const AdvisorApplication = () => {
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
       firstName: '',
@@ -25,25 +25,19 @@ export const AdvisorApplication = () => {
       setFormData({...formData, experience: val});
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newApp: AdvisorAppType = {
-        id: Math.floor(Math.random() * 10000),
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        birthDate: formData.birthDate,
-        education: formData.education,
-        experience: formData.experience,
-        date: new Date().toISOString().split('T')[0],
-        status: 'pending'
-    };
+    setIsLoading(true);
 
-    MOCK_ADVISOR_APPLICATIONS.push(newApp);
-    
-    setSubmitted(true);
+    try {
+        await api.applications.submitAdvisor(formData);
+        setSubmitted(true);
+    } catch (error) {
+        console.error("Application error", error);
+        alert("Başvuru sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.");
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   if (submitted) {
@@ -173,8 +167,8 @@ export const AdvisorApplication = () => {
                          </label>
                     </div>
 
-                    <button type="submit" className="w-full bg-dies-blue hover:bg-blue-900 text-white font-bold text-lg py-5 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
-                        BAŞVURU YAP
+                    <button disabled={isLoading} type="submit" className="w-full bg-dies-blue hover:bg-blue-900 text-white font-bold text-lg py-5 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2">
+                        {isLoading ? <Loader className="animate-spin" /> : 'BAŞVURU YAP'}
                     </button>
                 </form>
             </div>

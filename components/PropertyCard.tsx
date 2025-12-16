@@ -4,7 +4,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Bed, Bath, Square, CheckCircle } from 'lucide-react';
 import { Property } from '../types';
-import { MOCK_ADVISORS } from '../services/mockData';
 
 interface PropertyCardProps {
   property: Property;
@@ -12,7 +11,10 @@ interface PropertyCardProps {
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const navigate = useNavigate();
-  const advisor = MOCK_ADVISORS.find(a => a.id === property.advisorId);
+  
+  // Use advisor data from the API response (joined fields) or defaults
+  const advisorName = property.advisorName || 'Dies Danışmanı';
+  const advisorImage = property.advisorImage || 'https://via.placeholder.com/150';
 
   const handleClick = () => {
       navigate(`/ilan/${property.id}`);
@@ -31,18 +33,18 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   return (
     <div 
         onClick={handleClick}
-        className="group cursor-pointer bg-white rounded-xl overflow-hidden shadow-soft hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full relative"
+        className="group cursor-pointer bg-white rounded-xl overflow-hidden shadow-soft hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col h-full relative border border-gray-100/50"
     >
       {/* Top Banner Stripe */}
       <div className={`h-1 w-full ${property.type === 'Satılık' ? 'bg-dies-red' : 'bg-dies-blue'}`}></div>
 
       {/* Image */}
-      {/* Increased height to h-72 for bigger visual impact */}
-      <div className="relative h-72 overflow-hidden">
+      {/* Reduced height to h-64 for standard visual balance */}
+      <div className="relative h-64 overflow-hidden">
         <img 
             src={property.image} 
             alt={property.title} 
-            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${isSold ? 'grayscale' : ''}`}
+            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${isSold ? 'grayscale' : ''}`}
         />
         
         {/* Status Badge */}
@@ -120,11 +122,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         {/* Advisor Footer */}
         <div className="flex items-center justify-between mt-auto pt-2">
              <div className="flex items-center gap-3">
-                <img src={advisor?.image} alt={advisor?.name} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" />
+                <img src={advisorImage} alt={advisorName} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" />
                 <div className="flex flex-col">
                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wide">Danışman</span>
                     <span className="text-xs font-bold text-dies-dark truncate max-w-[140px]">
-                        {advisor?.name}
+                        {advisorName}
                     </span>
                 </div>
              </div>

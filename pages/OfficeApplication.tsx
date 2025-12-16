@@ -1,21 +1,35 @@
 
 import React, { useState } from 'react';
 import { useTheme } from '../components/ThemeContext';
-import { CheckCircle, Building, User, Mail, Phone, Calendar, BookOpen, MapPin, Briefcase, ArrowRight } from 'lucide-react';
+import { CheckCircle, Building, User, Mail, Phone, Calendar, BookOpen, MapPin, Briefcase, ArrowRight, Loader } from 'lucide-react';
 // @ts-ignore
 import { Link } from 'react-router-dom';
+import { api } from '../services/api';
 
 export const OfficeApplication = () => {
   const { theme } = useTheme();
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API submission
-    setTimeout(() => {
+    setIsLoading(true);
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const data: any = {};
+    formData.forEach((value, key) => (data[key] = value));
+
+    try {
+        await api.applications.submitOffice(data);
         setSubmitted(true);
         window.scrollTo(0, 0);
-    }, 1000);
+    } catch (error) {
+        console.error("Submission failed", error);
+        alert("Başvuru gönderilirken bir hata oluştu.");
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   if (submitted) {
@@ -55,38 +69,38 @@ export const OfficeApplication = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className={labelClass}>Ad</label>
-                                <input required type="text" placeholder="Adınız" className={inputClass} />
+                                <input required name="firstName" type="text" placeholder="Adınız" className={inputClass} />
                             </div>
                             <div>
                                 <label className={labelClass}>Soyad</label>
-                                <input required type="text" placeholder="Soyadınız" className={inputClass} />
+                                <input required name="lastName" type="text" placeholder="Soyadınız" className={inputClass} />
                             </div>
                         </div>
 
                         <div>
                             <label className={labelClass}>Email adresiniz</label>
-                            <input required type="email" placeholder="ornek@email.com" className={inputClass} />
+                            <input required name="email" type="email" placeholder="ornek@email.com" className={inputClass} />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div>
                                 <label className={labelClass}>Telefon</label>
-                                <input required type="tel" placeholder="05XX XXX XX XX" className={inputClass} />
+                                <input required name="phone" type="tel" placeholder="05XX XXX XX XX" className={inputClass} />
                             </div>
                             <div>
                                 <label className={labelClass}>Talep Edilen Şehir/Bölge</label>
-                                <input required type="text" placeholder="Şehir giriniz" className={inputClass} />
+                                <input required name="city" type="text" placeholder="Şehir giriniz" className={inputClass} />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className={labelClass}>Mevcut Meslek</label>
-                                <input type="text" placeholder="Mesleğiniz" className={inputClass} />
+                                <input name="profession" type="text" placeholder="Mesleğiniz" className={inputClass} />
                             </div>
                             <div>
                                 <label className={labelClass}>Yatırım Bütçesi</label>
-                                <select className={inputClass}>
+                                <select name="budget" className={inputClass}>
                                     <option>Seçiniz</option>
                                     <option>500.000 TL - 1.000.000 TL</option>
                                     <option>1.000.000 TL - 2.500.000 TL</option>
@@ -97,11 +111,11 @@ export const OfficeApplication = () => {
 
                         <div>
                             <label className={labelClass}>Eklemek İstedikleriniz (Opsiyonel)</label>
-                            <textarea rows={4} className={inputClass} placeholder="Bize kendinizden ve hedeflerinizden bahsedin..."></textarea>
+                            <textarea name="details" rows={4} className={inputClass} placeholder="Bize kendinizden ve hedeflerinizden bahsedin..."></textarea>
                         </div>
 
-                        <button type="submit" className="w-full bg-dies-blue hover:bg-blue-900 text-white font-bold text-lg py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2">
-                            BAŞVURU GÖNDER <ArrowRight size={20} />
+                        <button disabled={isLoading} type="submit" className="w-full bg-dies-blue hover:bg-blue-900 text-white font-bold text-lg py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2">
+                             {isLoading ? <Loader className="animate-spin" /> : <>BAŞVURU GÖNDER <ArrowRight size={20} /></>}
                         </button>
                     </form>
                 </div>

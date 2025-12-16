@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 // @ts-ignore
-import { MemoryRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { MemoryRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ThemeProvider } from './components/ThemeContext';
 import { AuthProvider, useAuth } from './components/AuthContext';
@@ -18,7 +18,7 @@ import { Offices } from './pages/Offices';
 import { Advisors } from './pages/Advisors';
 import { Lock, Mail, Phone, User as UserIcon, ArrowRight, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOCK_USERS } from './services/mockData';
+import { api } from './services/api';
 
 const MotionH2 = motion.h2 as any;
 const MotionDiv = motion.div as any;
@@ -48,54 +48,53 @@ const Login = () => {
         setError('');
         setIsLoading(true);
 
-        // Simulation Authentication Logic
-        setTimeout(() => {
+        try {
             if (isLogin) {
-                // Find user in MOCK_USERS database
-                const foundUser = MOCK_USERS.find(u => u.email.toLowerCase() === formData.email.toLowerCase());
+                // Real Login API Call
+                const response = await api.auth.login({
+                    email: formData.email,
+                    password: formData.password
+                });
                 
-                // Simple password check simulation (matches email prefix + 123 for demo)
-                const mockPassword = formData.email.split('@')[0] + '123';
+                login(response.user, response.token);
                 
-                if (foundUser && formData.password === mockPassword) {
-                    login(foundUser);
-                    if (foundUser.role === 'admin') {
-                        navigate('/admin');
-                    } else if (foundUser.role === 'advisor') {
-                        navigate('/profil');
-                    } else {
-                        navigate('/');
-                    }
+                if (response.user.role === 'admin') {
+                    navigate('/admin');
+                } else if (response.user.role === 'advisor') {
+                    navigate('/profil');
                 } else {
-                    setError('E-posta veya şifre hatalı.');
-                    setIsLoading(false);
+                    navigate('/');
                 }
             } else {
-                // Registration simulation
-                const newUser: any = { 
-                    id: Math.floor(Math.random() * 10000) + 1000, 
-                    name: formData.name, 
-                    email: formData.email, 
-                    role: 'user', 
-                    type: 'user',
-                    phone: formData.phone, 
-                    image: '' 
-                };
+                // Real Register API Call
+                const response = await api.auth.register({
+                    name: formData.name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    password: formData.password
+                });
                 
-                // Add to mock DB so Admin can see them
-                MOCK_USERS.push(newUser);
-                
-                login(newUser);
+                login(response.user, response.token);
                 navigate('/');
             }
-        }, 1000);
+        } catch (err) {
+            console.error("Auth error", err);
+            setError((err as Error).message || 'İşlem başarısız oldu.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const inputClass = "w-full pl-10 p-4 rounded-xl border border-gray-200 bg-gray-50 text-dies-dark outline-none focus:ring-2 focus:ring-dies-blue focus:bg-white transition-all";
     const labelClass = "block text-sm font-bold mb-2 ml-1 text-dies-slate";
 
     return (
-        <div className="pt-32 pb-20 flex justify-center px-4 min-h-[80vh] items-center bg-gray-50/50">
+        <MotionDiv 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="pt-32 pb-20 flex justify-center px-4 min-h-[80vh] items-center bg-gray-50/50"
+        >
             <div className="w-full max-w-lg">
                 {/* Login Form */}
                 <div className="w-full p-8 md:p-10 rounded-3xl bg-white shadow-soft border border-gray-100">
@@ -192,8 +191,32 @@ const Login = () => {
                     </form>
                 </div>
             </div>
-        </div>
+        </MotionDiv>
     );
+};
+
+// Seperate component for Routes to use useLocation
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Home />} />
+        <Route path="/ilanlar" element={<Listings />} />
+        <Route path="/ilan/:id" element={<ListingDetail />} />
+        <Route path="/danisman-ol" element={<AdvisorApplication />} />
+        <Route path="/ofis-basvuru" element={<OfficeApplication />} />
+        <Route path="/giris" element={<Login />} />
+        <Route path="/danisman/:id" element={<AdvisorDetail />} />
+        <Route path="/danismanlar" element={<Advisors />} />
+        <Route path="/ofislerimiz" element={<Offices />} />
+        <Route path="/ilan-ver" element={<CreateListing />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/profil" element={<Profile />} />
+      </Routes>
+    </AnimatePresence>
+  );
 };
 
 const App = () => {
@@ -202,20 +225,7 @@ const App = () => {
       <ThemeProvider>
         <Router>
           <Layout>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/ilanlar" element={<Listings />} />
-              <Route path="/ilan/:id" element={<ListingDetail />} />
-              <Route path="/danisman-ol" element={<AdvisorApplication />} />
-              <Route path="/ofis-basvuru" element={<OfficeApplication />} />
-              <Route path="/giris" element={<Login />} />
-              <Route path="/danisman/:id" element={<AdvisorDetail />} />
-              <Route path="/danismanlar" element={<Advisors />} />
-              <Route path="/ofislerimiz" element={<Offices />} />
-              <Route path="/ilan-ver" element={<CreateListing />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/profil" element={<Profile />} />
-            </Routes>
+            <AnimatedRoutes />
           </Layout>
         </Router>
       </ThemeProvider>

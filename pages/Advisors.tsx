@@ -1,118 +1,134 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // @ts-ignore
 import { Link } from 'react-router-dom';
-import { MOCK_ADVISORS } from '../services/mockData';
+import { api } from '../services/api';
+import { Advisor } from '../types';
 import { useTheme } from '../components/ThemeContext';
-import { Phone, ChevronRight, Briefcase, ArrowRight } from 'lucide-react';
+import { Phone, ChevronRight, Star } from 'lucide-react';
 import { DiesLogoIcon } from '../components/Icons';
+import { motion } from 'framer-motion';
+
+const MotionDiv = motion.div as any;
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  },
+  exit: { opacity: 0, y: -20 }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
 
 export const Advisors = () => {
   const { theme } = useTheme();
+  const [advisors, setAdvisors] = useState<Advisor[]>([]);
 
-  // Filter out admin roles if any exist in the mock data, though generally advisors are added here
-  // Also ensuring we only show valid advisors
-  const displayAdvisors = MOCK_ADVISORS.filter(advisor => advisor.role !== 'admin');
+  useEffect(() => {
+      api.advisors.getList().then(setAdvisors).catch(console.error);
+  }, []);
+
+  // Filter out Admin AND Founders/Brokers. Only show regular advisors.
+  const displayAdvisors = advisors.filter(advisor => 
+      advisor.role !== 'admin' && 
+      !advisor.isFounder && 
+      !advisor.role.toLowerCase().includes('kurucu') &&
+      !advisor.role.toLowerCase().includes('broker')
+  );
 
   return (
-    <div className="min-h-screen pt-32 pb-20">
+    <MotionDiv 
+      initial="hidden"
+      animate="show"
+      exit="exit"
+      variants={containerVariants}
+      className="min-h-screen pt-28 md:pt-32 pb-20 bg-gray-50"
+    >
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className={`text-4xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-dies-blue'}`}>
+        <div className="text-center mb-8 md:mb-12">
+          <h1 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-dies-blue'}`}>
             Uzman <span className="text-dies-blue">Danışmanlarımız</span>
           </h1>
-          <p className="text-gray-500 max-w-2xl mx-auto">
+          <p className="text-gray-500 max-w-2xl mx-auto text-sm md:text-base">
             Gayrimenkul yatırımlarınızda size en doğru yolu gösterecek profesyonel ekibimizle tanışın.
           </p>
         </div>
 
-        {/* Recruitment Banner (New Position) */}
-        <div className="mb-16 bg-gradient-to-r from-dies-blue to-blue-900 rounded-3xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl relative overflow-hidden">
-             {/* Decorative Background */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-dies-red/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-            
-            <div className="relative z-10 flex items-center gap-6">
-                <div className="hidden md:flex w-20 h-20 bg-white/10 rounded-2xl items-center justify-center backdrop-blur-sm border border-white/10 shadow-inner">
-                    <Briefcase size={36} className="text-white" />
-                </div>
-                <div className="text-center md:text-left">
-                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Ekibimize Katılın</h3>
-                    <p className="text-blue-100 max-w-xl text-lg leading-relaxed">
-                        Gayrimenkul sektöründe kariyer hedefliyor ve yüksek kazanç elde etmek istiyorsanız, Dies ailesi sizi bekliyor.
-                    </p>
-                </div>
-            </div>
-            
-            <Link 
-                to="/danisman-ol" 
-                className="relative z-10 flex items-center gap-2 bg-white text-dies-blue px-8 py-4 rounded-xl font-bold hover:bg-dies-red hover:text-white transition-all shadow-lg whitespace-nowrap transform hover:-translate-y-1"
-            >
-                Başvuru Yap <ArrowRight size={20} />
-            </Link>
-        </div>
-
         {/* Advisors Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
           {displayAdvisors.map((advisor) => {
              return (
-                <div 
+                <MotionDiv 
                   key={advisor.id} 
-                  className={`group relative rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl flex flex-col ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100 shadow-lg'}`}
+                  variants={itemVariants}
+                  className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex flex-col group hover:shadow-2xl transition-all duration-300"
                 >
-                  {/* Badge/Logo Overlay */}
-                  <div className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-1.5 rounded-lg shadow-sm">
-                     <DiesLogoIcon className="w-6 h-6 text-black" />
-                  </div>
-
                   {/* Image Section */}
-                  <div className="relative h-72 overflow-hidden bg-gray-200">
+                  <div className="relative h-64 md:h-72 w-full bg-gray-200">
                     <img 
                       src={advisor.image} 
                       alt={advisor.name} 
-                      className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover object-top"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
                     
-                    {/* Name on Image (Mobile/Design Choice) */}
-                    <div className="absolute bottom-0 left-0 w-full p-6 pt-12">
-                       <h3 className="text-white text-xl font-bold leading-tight mb-1">{advisor.name}</h3>
-                       <p className="text-gray-300 text-sm font-medium uppercase tracking-wide">{advisor.role}</p>
+                    {/* Logo Badge - Top Right */}
+                    <div className="absolute top-4 right-4 bg-white p-1.5 rounded-lg shadow-md z-10 w-10 h-10 flex items-center justify-center">
+                        <DiesLogoIcon className="w-full h-full object-contain" />
+                    </div>
+
+                    {/* Dark Gradient Overlay & Text */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
+                         <div className="absolute bottom-4 left-4 right-4">
+                            <h3 className="text-white text-lg md:text-xl font-bold mb-1">{advisor.name}</h3>
+                            <p className="text-gray-300 text-[10px] md:text-xs font-bold uppercase tracking-wider">{advisor.role}</p>
+                         </div>
                     </div>
                   </div>
 
                   {/* Content Section */}
-                  <div className="p-6 pt-4 flex flex-col flex-grow">
-                    {/* Dies Branding Line */}
-                    <div className="flex items-center gap-1 mb-4 opacity-70">
-                        <span className={`text-xs font-bold uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Dies Emlak Gayrimenkul</span>
+                  <div className="p-5 flex flex-col gap-3">
+                    
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">DIES EMLAK GAYRİMENKUL</p>
+                    
+                    <div className="flex text-yellow-400 gap-1 text-sm">
+                        <Star size={14} fill="currentColor" />
+                        <Star size={14} fill="currentColor" />
+                        <Star size={14} fill="currentColor" />
+                        <Star size={14} fill="currentColor" />
+                        <Star size={14} fill="currentColor" />
                     </div>
 
-                    <div className="mt-auto space-y-3">
-                        <a href={`tel:${advisor.phone}`} className={`flex items-center gap-3 text-sm font-medium transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-dies-blue' : 'text-gray-600 hover:text-dies-blue'}`}>
-                            <Phone size={16} className="text-dies-blue" />
-                            {advisor.phone}
-                        </a>
-                        
-                        <div className={`w-full h-px ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-100'}`}></div>
+                    <a href={`tel:${advisor.phone}`} className="flex items-center gap-2 text-dies-blue text-sm font-bold hover:text-dies-red transition-colors mt-1">
+                        <Phone size={16} />
+                        {advisor.phone}
+                    </a>
 
+                    <div className="mt-3 pt-4 border-t border-gray-100">
                         <Link 
                             to={`/danisman/${advisor.id}`}
-                            className="flex items-center justify-between w-full group/btn"
+                            className="flex items-center justify-between w-full bg-gray-50 hover:bg-gray-100 text-dies-blue px-4 py-3 rounded-xl transition-colors group/btn"
                         >
-                            <span className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-dies-blue'}`}>Profili İncele</span>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-zinc-800 group-hover/btn:bg-dies-blue' : 'bg-gray-100 group-hover/btn:bg-dies-blue'}`}>
-                                <ChevronRight size={16} className={`transition-colors ${theme === 'dark' ? 'text-white' : 'text-gray-600 group-hover/btn:text-white'}`} />
+                            <span className="text-sm font-bold">Profili İncele</span>
+                            <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
+                                <ChevronRight size={14} />
                             </div>
                         </Link>
                     </div>
+
                   </div>
-                </div>
+                </MotionDiv>
              );
           })}
         </div>
       </div>
-    </div>
+    </MotionDiv>
   );
 };

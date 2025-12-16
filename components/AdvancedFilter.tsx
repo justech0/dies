@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Filter, Search, RotateCcw } from 'lucide-react';
-import { TURKEY_LOCATIONS } from '../services/mockData';
+import { api } from '../services/api';
 
 interface FilterProps {
   onFilter: (filters: any) => void;
@@ -11,7 +11,7 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
   const initialFilters = {
     status: 'Tümü',
     type: 'Tümü',
-    province: '',
+    province: '', // Now stores ID or Name depending on backend requirement. Let's assume Name for filtering URL consistency
     district: '',
     neighborhood: '',
     minPrice: '',
@@ -25,6 +25,42 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
   };
 
   const [filters, setFilters] = useState(initialFilters);
+  const [cities, setCities] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
+
+  // Load Cities on Mount
+  useEffect(() => {
+      api.locations.getCities().then(setCities).catch(console.error);
+  }, []);
+
+  // Load Districts when City changes
+  useEffect(() => {
+      if (filters.province) {
+          // Find city ID if filters.province stores ID, or find by name
+          // Assuming API returns {id, name}. 
+          const city = cities.find(c => c.name === filters.province || c.id.toString() === filters.province);
+          if (city) {
+              api.locations.getDistricts(city.id).then(setDistricts).catch(console.error);
+          }
+      } else {
+          setDistricts([]);
+      }
+      setNeighborhoods([]);
+  }, [filters.province, cities]);
+
+  // Load Neighborhoods when District changes
+  useEffect(() => {
+      if (filters.district) {
+          const dist = districts.find(d => d.name === filters.district || d.id.toString() === filters.district);
+          if (dist) {
+              api.locations.getNeighborhoods(dist.id).then(setNeighborhoods).catch(console.error);
+          }
+      } else {
+          setNeighborhoods([]);
+      }
+  }, [filters.district, districts]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -49,11 +85,6 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
 
   const inputClass = "w-full p-3 rounded-lg border border-gray-200 bg-gray-50 text-dies-dark font-medium placeholder-gray-400 focus:ring-2 focus:ring-dies-blue focus:bg-white focus:border-transparent outline-none transition-all";
   const labelClass = "block text-xs font-bold uppercase tracking-wider mb-2 text-dies-slate";
-
-  const districts = filters.province ? Object.keys(TURKEY_LOCATIONS[filters.province] || {}) : [];
-  const neighborhoods = (filters.province && filters.district) 
-    ? TURKEY_LOCATIONS[filters.province][filters.district] 
-    : [];
 
   return (
     <form onSubmit={handleSubmit} className="p-5 md:p-8 rounded-3xl shadow-soft bg-white border border-gray-100">
@@ -108,8 +139,8 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
             <label className={labelClass}>İl</label>
             <select name="province" value={filters.province} onChange={handleChange} className={inputClass}>
                 <option value="">İl Seçiniz</option>
-                {Object.keys(TURKEY_LOCATIONS).map(city => (
-                    <option key={city} value={city}>{city}</option>
+                {cities.map(city => (
+                    <option key={city.id} value={city.name}>{city.name}</option>
                 ))}
             </select>
         </div>
@@ -117,14 +148,14 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
             <label className={labelClass}>İlçe</label>
             <select name="district" value={filters.district} onChange={handleChange} className={inputClass} disabled={!filters.province}>
                 <option value="">İlçe Seçiniz</option>
-                {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
             </select>
         </div>
         <div>
             <label className={labelClass}>Mahalle</label>
             <select name="neighborhood" value={filters.neighborhood} onChange={handleChange} className={inputClass} disabled={!filters.district}>
                 <option value="">Mahalle Seçiniz</option>
-                {neighborhoods.map(n => <option key={n} value={n}>{n}</option>)}
+                {neighborhoods.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
             </select>
         </div>
         <div>

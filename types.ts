@@ -1,6 +1,4 @@
 
-
-
 export interface Property {
   id: number;
   title: string;
@@ -33,6 +31,10 @@ export interface Property {
   isInComplex?: boolean; // Site içerisinde mi
   balconyCount?: number;
   hasBalcony?: boolean; // New field
+
+  // Join Fields (Returned from API to display in cards)
+  advisorName?: string;
+  advisorImage?: string;
 }
 
 export interface Advisor {
@@ -95,12 +97,14 @@ export interface OfficeApplication {
   lastName: string;
   email: string;
   phone: string;
-  birthDate: string;
+  birthDate?: string;
   profession: string;
   city: string;
-  education: string;
+  education?: string;
   date: string;
   status: 'pending' | 'reviewed' | 'approved' | 'rejected';
+  budget?: string; // Added
+  details?: string; // Added
 }
 
 export interface AdvisorApplication {
