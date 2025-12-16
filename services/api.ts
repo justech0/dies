@@ -28,6 +28,19 @@ const enrichProperty = (p: Property): Property => {
 };
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  // Construct headers first to ensure token is present for both Mock and Real fetch
+  const token = localStorage.getItem('dies_token');
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (options.body instanceof FormData) {
+      delete headers['Content-Type'];
+  }
+
   // --- MOCK ADAPTER START ---
   if (USE_MOCK_DATA) {
       // await delay(400); // DELAY REMOVED
@@ -61,7 +74,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
                return { user: newUser, token: `mock-token-${newUser.id}` } as any;
           }
           if (action === 'me') {
-              const authHeader = (options.headers as any)?.['Authorization'];
+              const authHeader = headers['Authorization'];
               if (authHeader) {
                   // Extract ID from "Bearer mock-token-ID"
                   const id = authHeader.includes('mock-token-') ? authHeader.split('mock-token-')[1] : null;
@@ -301,18 +314,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   // --- MOCK ADAPTER END ---
 
   // Real Fetch Logic (Will be used when USE_MOCK_DATA is false)
-  const token = localStorage.getItem('dies_token');
+  // Headers are already constructed above
   
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-
-  if (options.body instanceof FormData) {
-      delete (headers as any)['Content-Type'];
-  }
-
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
