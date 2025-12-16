@@ -238,17 +238,6 @@ export const ListingDetail = () => {
                         ))}
                     </div>
                 </div>
-
-                {/* Info Alert */}
-                <div className="mt-8 md:mt-12 p-6 md:p-8 rounded-2xl bg-gray-100 border border-gray-200">
-                     <div className="flex items-center gap-3 mb-4">
-                         <AlertTriangle className="text-dies-blue" />
-                         <h3 className="text-lg md:text-xl font-bold text-dies-dark">Bilgilendirme</h3>
-                     </div>
-                     <p className="text-xs md:text-sm text-gray-500">
-                         İlan bilgileri ilan sahibi tarafından girilmiştir. Dies Gayrimenkul hatalı bilgilerden sorumlu tutulamaz. Detaylı bilgi için danışmanımızla iletişime geçiniz.
-                     </p>
-                </div>
             </div>
 
             <div className="space-y-6">

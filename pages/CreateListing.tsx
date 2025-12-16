@@ -37,12 +37,17 @@ export const CreateListing = () => {
       neighborhood: ''
   });
 
+  // Category State for Conditional Rendering
+  const [category, setCategory] = useState<string>('Konut');
+
   // Features State
   const availableFeatures = [
       "Çelik Kapı", "Parke Zemin", "Duşakabin", "Ebeveyn Banyosu", 
       "Asansör", "Balkon", "Isı Yalıtımı", "Kablo TV", "Uydu", 
       "Otopark", "Güvenlik", "Görüntülü Diafon", "Ankastre Mutfak",
-      "Kiler", "Vestiyer", "Yangın Merdiveni", "Kapıcı"
+      "Kiler", "Vestiyer", "Yangın Merdiveni", "Kapıcı", 
+      // Arsa/Ticari Features
+      "İmarlı", "Köşe Parsel", "Ana Cadde", "Depolu", "Yük Asansörü"
   ];
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   
@@ -56,9 +61,6 @@ export const CreateListing = () => {
   // Pre-fill Logic
   useEffect(() => {
       if (editingProperty) {
-          // Note: If province/district are names in Property, we just set them.
-          // If they are IDs, we might need to wait for cities to load to match name.
-          // Assuming existing property strings match the location names for now.
           setLocationState({
               province: editingProperty.province || '',
               district: editingProperty.district || '',
@@ -74,7 +76,7 @@ export const CreateListing = () => {
           // Pre-fill features
           setSelectedFeatures(editingProperty.features || []);
 
-          // Trigger cascade load if needed (optional optimization)
+          setCategory(editingProperty.category || 'Konut');
       }
   }, [editingProperty]);
 
@@ -88,7 +90,6 @@ export const CreateListing = () => {
       } else {
           setDistricts([]);
       }
-      // Only reset if user changed province manually, not on initial load
       if (!editingProperty || locationState.province !== editingProperty.province) {
           setNeighborhoods([]);
       }
@@ -123,7 +124,7 @@ export const CreateListing = () => {
       );
   }
 
-  // ... Image Compression Logic (Same as before) ...
+  // ... Image Compression Logic ...
   const compressImage = async (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -165,13 +166,10 @@ export const CreateListing = () => {
           alert("En fazla 15 fotoğraf yükleyebilirsiniz.");
           return;
       }
-
       setIsCompressing(true);
       try {
           const processedFiles = await Promise.all(files.map(compressImage));
           setImages(prev => [...prev, ...processedFiles]);
-          
-          // Generate local previews immediately
           const newPreviews = processedFiles.map(file => URL.createObjectURL(file));
           setPreviews(prev => [...prev, ...newPreviews]);
       } catch (error) {
@@ -209,20 +207,11 @@ export const CreateListing = () => {
   };
 
   const removeImage = (indexToRemove: number) => {
-      // Logic to remove from previews and images array correctly
-      // Note: If editing, previews might contain URLs not in 'images' array.
-      // We need to track which previews are new vs existing.
       const existingUrls = editingProperty?.images || [];
-      const isExisting = indexToRemove < existingUrls.length && previews[indexToRemove] === existingUrls[indexToRemove]; // Simplified check
+      const numExisting = previews.length - images.length;
       
       setPreviews(prev => prev.filter((_, i) => i !== indexToRemove));
       
-      // If it was a new file, remove from images state
-      // Complex part: mapping index of preview to index of image file.
-      // For simplicity in this demo: we just rely on visual removal, but 
-      // correct implementation needs to filter 'images' based on which preview was removed.
-      // Let's assume new images are appended at the end.
-      const numExisting = previews.length - images.length;
       if (indexToRemove >= numExisting) {
            const fileIndex = indexToRemove - numExisting;
            setImages(prev => prev.filter((_, i) => i !== fileIndex));
@@ -252,18 +241,13 @@ export const CreateListing = () => {
     setUploadProgress(0);
 
     try {
-        // 1. Upload Images
         let uploadedUrls: string[] = [];
-        // Keep existing URLs
         const existingUrls = previews.filter(url => url.startsWith('http'));
         
         if (images.length > 0) {
             const formData = new FormData();
             images.forEach(file => formData.append('files[]', file));
-            
-            // Simulating progress
             const interval = setInterval(() => setUploadProgress(prev => Math.min(prev + 10, 90)), 200);
-            
             const uploadRes = await api.upload(formData);
             uploadedUrls = uploadRes.urls;
             clearInterval(interval);
@@ -272,7 +256,6 @@ export const CreateListing = () => {
         const finalImages = [...existingUrls, ...uploadedUrls];
         setUploadProgress(100);
 
-        // 2. Submit Property Data
         const form = e.target as HTMLFormElement;
         const formData = new FormData(form);
         
@@ -284,21 +267,22 @@ export const CreateListing = () => {
             province: locationState.province,
             district: locationState.district,
             neighborhood: locationState.neighborhood,
-            category: formData.get('category'),
-            type: user?.role === 'user' ? 'pending' : 'Satılık', // Default logic
+            category: category,
+            type: user?.role === 'user' ? 'pending' : 'Satılık', 
             image: finalImages[0],
             images: finalImages,
-            bedrooms: formData.get('bedrooms'),
-            bathrooms: 1, // hardcoded for now
+            // Conditional fields
+            bedrooms: category === 'Konut' ? formData.get('bedrooms') : undefined,
+            bathrooms: category === 'Konut' ? 1 : undefined,
             area: Number(formData.get('area')),
             netArea: Number(formData.get('net_area')),
             advisorId: user?.id,
             sahibindenLink: formData.get('sahibinden_link'),
             description: formData.get('description'),
             features: selectedFeatures,
-            buildingAge: formData.get('building_age'),
-            heatingType: formData.get('heating_type'),
-            isFurnished: formData.get('is_furnished') === '1',
+            buildingAge: category === 'Konut' ? formData.get('building_age') : undefined,
+            heatingType: category === 'Konut' ? formData.get('heating_type') : undefined,
+            isFurnished: category === 'Konut' ? formData.get('is_furnished') === '1' : false,
             hasBalcony: selectedFeatures.includes('Balkon')
         };
 
@@ -319,7 +303,6 @@ export const CreateListing = () => {
     }
   };
 
-  // ... Loading and Success UI (Same as before) ...
   if (isLoading && !submitted) {
       return (
           <div className="min-h-[80vh] flex flex-col items-center justify-center pt-20 px-4">
@@ -364,6 +347,8 @@ export const CreateListing = () => {
   ${theme === 'dark' ? 'bg-black/50 border-zinc-700 text-white placeholder-zinc-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`;
   const labelClass = `block text-sm font-bold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`;
 
+  const isResidental = category === 'Konut';
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 pt-32">
         <div className="max-w-4xl mx-auto">
@@ -378,7 +363,15 @@ export const CreateListing = () => {
                         <input required type="text" name="title" defaultValue={editingProperty?.title} className={inputClass} placeholder="Örn: Gültepe'de Satılık Lüks Daire" />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                             <label className={labelClass}>Kategori</label>
+                             <select name="category" value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+                                 <option value="Konut">Konut</option>
+                                 <option value="Ticari">Ticari</option>
+                                 <option value="Arsa">Arsa</option>
+                             </select>
+                        </div>
                         <div>
                             <label className={labelClass}>İl</label>
                             <select required name="province" value={locationState.province} onChange={handleLocationChange} className={inputClass}>
@@ -401,24 +394,12 @@ export const CreateListing = () => {
                              </select>
                         </div>
                     </div>
-                    {/* ... Rest of the form inputs (Price, Features, Description, Image Upload) remain largely the same structure, just wrapped in the form ... */}
-                    {/* Simplified for brevity in this response, but fully implemented in actual file above */}
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div>
                             <label className={labelClass}>Fiyat (TL)</label>
                             <input required name="price" type="number" min="0" defaultValue={editingProperty?.price} className={inputClass} />
                         </div>
-                        <div>
-                             <label className={labelClass}>Kategori</label>
-                             <select name="category" defaultValue={editingProperty?.category} className={inputClass}>
-                                 <option value="Konut">Konut</option>
-                                 <option value="Ticari">Ticari</option>
-                                 <option value="Arsa">Arsa</option>
-                             </select>
-                        </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label className={labelClass}>Brüt m²</label>
                             <input required name="area" type="number" min="0" defaultValue={editingProperty?.area} className={inputClass} />
@@ -427,59 +408,64 @@ export const CreateListing = () => {
                             <label className={labelClass}>Net m²</label>
                             <input required name="net_area" type="number" min="0" defaultValue={editingProperty?.netArea} className={inputClass} />
                         </div>
-                        <div>
-                             <label className={labelClass}>Oda Sayısı</label>
-                             <select name="bedrooms" defaultValue={editingProperty?.bedrooms} className={inputClass}>
-                                 <option>1+0 (Stüdyo)</option>
-                                 <option>1+1</option>
-                                 <option>2+1</option>
-                                 <option>3+1</option>
-                                 <option>4+1</option>
-                                 <option>4.5+1</option>
-                                 <option>5+1</option>
-                                 <option>5+2</option>
-                                 <option>6+1</option>
-                                 <option>6+2</option>
-                                 <option>7+1</option>
-                                 <option>8+1</option>
-                                 <option>Villa Tipi</option>
-                             </select>
-                        </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label className={labelClass}>Isıtma Tipi</label>
-                            <select name="heating_type" defaultValue={editingProperty?.heatingType} className={inputClass}>
-                                <option>Kombi (Doğalgaz)</option>
-                                <option>Merkezi</option>
-                                <option>Yerden Isıtma</option>
-                                <option>Klima</option>
-                                <option>Soba</option>
-                                <option>Yok</option>
-                            </select>
-                        </div>
-                        <div>
-                             <label className={labelClass}>Bina Yaşı</label>
-                             <select name="building_age" defaultValue={editingProperty?.buildingAge} className={inputClass}>
-                                 <option>0</option>
-                                 <option>1-5</option>
-                                 <option>5-10</option>
-                                 <option>10-20</option>
-                                 <option>20+</option>
-                             </select>
-                        </div>
-                        <div>
-                             <label className={labelClass}>Eşyalı mı?</label>
-                             <select name="is_furnished" defaultValue={editingProperty?.isFurnished ? "1" : "0"} className={inputClass}>
-                                 <option value="0">Hayır</option>
-                                 <option value="1">Evet</option>
-                             </select>
-                        </div>
-                    </div>
+                    
+                    {/* Conditional Fields for Residental Only */}
+                    {isResidental && (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className={labelClass}>Oda Sayısı</label>
+                                    <select name="bedrooms" defaultValue={editingProperty?.bedrooms} className={inputClass}>
+                                        <option>1+0 (Stüdyo)</option>
+                                        <option>1+1</option>
+                                        <option>2+1</option>
+                                        <option>3+1</option>
+                                        <option>4+1</option>
+                                        <option>4.5+1</option>
+                                        <option>5+1</option>
+                                        <option>5+2</option>
+                                        <option>6+1</option>
+                                        <option>6+2</option>
+                                        <option>7+1</option>
+                                        <option>8+1</option>
+                                        <option>Villa Tipi</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Isıtma Tipi</label>
+                                    <select name="heating_type" defaultValue={editingProperty?.heatingType} className={inputClass}>
+                                        <option>Kombi (Doğalgaz)</option>
+                                        <option>Merkezi</option>
+                                        <option>Yerden Isıtma</option>
+                                        <option>Klima</option>
+                                        <option>Soba</option>
+                                        <option>Yok</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Bina Yaşı</label>
+                                    <select name="building_age" defaultValue={editingProperty?.buildingAge} className={inputClass}>
+                                        <option>0</option>
+                                        <option>1-5</option>
+                                        <option>5-10</option>
+                                        <option>10-20</option>
+                                        <option>20+</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className={labelClass}>Eşyalı mı?</label>
+                                <select name="is_furnished" defaultValue={editingProperty?.isFurnished ? "1" : "0"} className={inputClass}>
+                                    <option value="0">Hayır</option>
+                                    <option value="1">Evet</option>
+                                </select>
+                            </div>
+                        </>
+                    )}
 
                     <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                        <label className={`${labelClass} mb-4 text-lg`}>Daire Özellikleri</label>
+                        <label className={`${labelClass} mb-4 text-lg`}>Özellikler</label>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {availableFeatures.map(feature => (
                                 <label key={feature} className="flex items-center gap-2 cursor-pointer group">

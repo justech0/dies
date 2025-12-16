@@ -66,12 +66,37 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
                   // Extract ID from "Bearer mock-token-ID"
                   const id = authHeader.includes('mock-token-') ? authHeader.split('mock-token-')[1] : null;
                   const user = MOCK_USERS.find(u => u.id.toString() === id);
-                  if (user) return user as any;
+                  if (user) {
+                      // If user is advisor, merge advisor specific fields if needed
+                      const advisor = MOCK_ADVISORS.find(a => a.id === user.id);
+                      if (advisor) {
+                          return { ...user, ...advisor } as any;
+                      }
+                      return user as any;
+                  }
                   
                   // Fallback for demo stability if token format differs
                   return MOCK_USERS[0] as any;
               }
               throw new Error('Unauthorized');
+          }
+          if (action === 'update_profile') {
+              const body = JSON.parse(options.body as string);
+              const userId = body.id;
+              
+              // Update User Table
+              const userIndex = MOCK_USERS.findIndex(u => u.id === userId);
+              if (userIndex > -1) {
+                  MOCK_USERS[userIndex] = { ...MOCK_USERS[userIndex], ...body };
+              }
+
+              // Update Advisor Table if exists
+              const advisorIndex = MOCK_ADVISORS.findIndex(a => a.id === userId);
+              if (advisorIndex > -1) {
+                  MOCK_ADVISORS[advisorIndex] = { ...MOCK_ADVISORS[advisorIndex], ...body };
+              }
+
+              return { success: true, user: MOCK_USERS[userIndex] } as any;
           }
       }
 
@@ -312,6 +337,10 @@ export const api = {
       body: JSON.stringify(data),
     }),
     me: () => request<User>('/api_auth.php?action=me'),
+    updateProfile: (data: any) => request<{ success: boolean, user: User }>('/api_auth.php?action=update_profile', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
   },
 
   locations: {

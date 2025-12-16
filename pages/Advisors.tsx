@@ -5,8 +5,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { Advisor } from '../types';
 import { useTheme } from '../components/ThemeContext';
-import { Phone, ChevronRight, Star } from 'lucide-react';
-import { DiesLogoIcon } from '../components/Icons';
+import { Phone, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const MotionDiv = motion.div as any;
@@ -79,11 +78,6 @@ export const Advisors = () => {
                       className="w-full h-full object-cover object-top"
                     />
                     
-                    {/* Logo Badge - Top Right */}
-                    <div className="absolute top-4 right-4 bg-white p-1.5 rounded-lg shadow-md z-10 w-10 h-10 flex items-center justify-center">
-                        <DiesLogoIcon className="w-full h-full object-contain" />
-                    </div>
-
                     {/* Dark Gradient Overlay & Text */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
                          <div className="absolute bottom-4 left-4 right-4">
@@ -98,14 +92,6 @@ export const Advisors = () => {
                     
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">DIES EMLAK GAYRİMENKUL</p>
                     
-                    <div className="flex text-yellow-400 gap-1 text-sm">
-                        <Star size={14} fill="currentColor" />
-                        <Star size={14} fill="currentColor" />
-                        <Star size={14} fill="currentColor" />
-                        <Star size={14} fill="currentColor" />
-                        <Star size={14} fill="currentColor" />
-                    </div>
-
                     <a href={`tel:${advisor.phone}`} className="flex items-center gap-2 text-dies-blue text-sm font-bold hover:text-dies-red transition-colors mt-1">
                         <Phone size={16} />
                         {advisor.phone}

@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../components/AuthContext';
 // @ts-ignore
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, CheckCircle, XCircle, BarChart, Trash2, Clock, Users, Edit, Plus, Image as ImageIcon, Layout, Save, Settings, ShieldAlert, Building, FileText, Eye, MapPin, MessageCircle, Filter, Search, LogOut, Briefcase, UploadCloud, X, List, Phone } from 'lucide-react';
+import { Home, CheckCircle, XCircle, BarChart, Trash2, Clock, Users, Edit, Plus, Image as ImageIcon, Layout, Save, Settings, ShieldAlert, Building, FileText, Eye, MapPin, MessageCircle, Filter, Search, LogOut, Briefcase, UploadCloud, X, List, Phone, RefreshCw } from 'lucide-react';
 import { Property, Advisor, Office, OfficeApplication, AdvisorApplication, User } from '../types';
 import { api } from '../services/api';
 
@@ -26,6 +26,11 @@ export const AdminDashboard = () => {
   // Office Management State
   const [isEditingOffice, setIsEditingOffice] = useState(false);
   const [currentOffice, setCurrentOffice] = useState<Partial<Office>>({});
+  const [officeImageFile, setOfficeImageFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string>('');
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [isSavingOffice, setIsSavingOffice] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Data States
   const [stats, setStats] = useState<any>({});
@@ -74,6 +79,72 @@ export const AdminDashboard = () => {
           loadAdminData();
       }
   }, [user]);
+
+  // OFFICE IMAGE HANDLING
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_DIMENSION = 1920;
+            if (width > height) {
+                if (width > MAX_DIMENSION) {
+                    height *= MAX_DIMENSION / width;
+                    width = MAX_DIMENSION;
+                }
+            } else {
+                if (height > MAX_DIMENSION) {
+                    width *= MAX_DIMENSION / height;
+                    height = MAX_DIMENSION;
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) { resolve(file); return; }
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => {
+                if (!blob) { resolve(file); return; }
+                const newName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+                const compressedFile = new File([blob], newName, { type: 'image/webp', lastModified: Date.now() });
+                resolve(compressedFile);
+            }, 'image/webp', 0.8);
+        };
+        img.onerror = (err) => reject(err);
+    });
+  };
+
+  const handleOfficeImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setIsCompressing(true);
+          try {
+              const originalFile = e.target.files[0];
+              const compressedFile = await compressImage(originalFile);
+              setOfficeImageFile(compressedFile);
+              setPreviewImage(URL.createObjectURL(compressedFile));
+          } catch (error) {
+              console.error("Compression failed", error);
+              alert("Resim işlenirken hata oluştu.");
+          } finally {
+              setIsCompressing(false);
+          }
+      }
+  };
+
+  const openOfficeModal = (office?: Office) => {
+      if (office) {
+          setCurrentOffice(office);
+          setPreviewImage(office.image);
+      } else {
+          setCurrentOffice({});
+          setPreviewImage('');
+      }
+      setOfficeImageFile(null);
+      setIsEditingOffice(true);
+  };
 
   // Access Control
   if (!user || user.role !== 'admin') {
@@ -149,17 +220,35 @@ export const AdminDashboard = () => {
   // OFFICE ACTIONS
   const handleSaveOffice = async (e: React.FormEvent) => {
       e.preventDefault();
+      setIsSavingOffice(true);
       try {
-          if (currentOffice.id) {
-              await api.offices.update(currentOffice.id, currentOffice);
+          let imageUrl = currentOffice.image || '';
+
+          // 1. Upload new image if selected
+          if (officeImageFile) {
+              const formData = new FormData();
+              formData.append('files[]', officeImageFile);
+              const res = await api.upload(formData);
+              if (res.urls && res.urls.length > 0) {
+                  imageUrl = res.urls[0];
+              }
+          }
+
+          const officeData = { ...currentOffice, image: imageUrl };
+
+          if (officeData.id) {
+              await api.offices.update(officeData.id, officeData);
           } else {
-              await api.offices.create(currentOffice);
+              await api.offices.create(officeData);
           }
           await loadAdminData(); // Refresh all data
           setIsEditingOffice(false);
           setCurrentOffice({});
+          setOfficeImageFile(null);
       } catch (error) {
           alert("Ofis kaydedilirken hata oluştu.");
+      } finally {
+          setIsSavingOffice(false);
       }
   };
 
@@ -412,7 +501,7 @@ export const AdminDashboard = () => {
             <div>
                  <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold flex items-center gap-2"><Building /> Ofis Yönetimi</h3>
-                    <button onClick={() => { setCurrentOffice({}); setIsEditingOffice(true); }} className="bg-dies-blue text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-sm hover:bg-blue-900 transition-colors">
+                    <button onClick={() => openOfficeModal()} className="bg-dies-blue text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-sm hover:bg-blue-900 transition-colors">
                         <Plus size={18} /> Yeni Ofis Ekle
                     </button>
                 </div>
@@ -423,7 +512,7 @@ export const AdminDashboard = () => {
                             <div className="h-40 relative">
                                 <img src={office.image} alt={office.name} className="w-full h-full object-cover" />
                                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => { setCurrentOffice(office); setIsEditingOffice(true); }} className="bg-white p-2 rounded-full text-orange-500 hover:text-orange-600 shadow-sm"><Edit size={16}/></button>
+                                    <button onClick={() => openOfficeModal(office)} className="bg-white p-2 rounded-full text-orange-500 hover:text-orange-600 shadow-sm"><Edit size={16}/></button>
                                     <button onClick={() => handleDeleteOffice(office.id)} className="bg-white p-2 rounded-full text-red-500 hover:text-red-600 shadow-sm"><Trash2 size={16}/></button>
                                 </div>
                             </div>
@@ -503,17 +592,63 @@ export const AdminDashboard = () => {
                   </div>
                   <form onSubmit={handleSaveOffice} className="p-6 space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Ofis Adı</label><input required value={currentOffice.name || ''} onChange={e => setCurrentOffice({...currentOffice, name: e.target.value})} className={inputClass} /></div>
-                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Şehir</label><input required value={currentOffice.city || ''} onChange={e => setCurrentOffice({...currentOffice, city: e.target.value})} className={inputClass} /></div>
-                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Telefon</label><input required value={currentOffice.phone || ''} onChange={e => setCurrentOffice({...currentOffice, phone: e.target.value})} className={inputClass} /></div>
-                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Whatsapp</label><input value={currentOffice.whatsapp || ''} onChange={e => setCurrentOffice({...currentOffice, whatsapp: e.target.value})} className={inputClass} /></div>
+                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Ofis Adı</label><input required value={currentOffice.name || ''} onChange={e => setCurrentOffice({...currentOffice, name: e.target.value})} className={inputClass} placeholder="Örn: Batman Merkez Ofis" /></div>
+                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Şehir</label><input required value={currentOffice.city || ''} onChange={e => setCurrentOffice({...currentOffice, city: e.target.value})} className={inputClass} placeholder="Örn: Batman" /></div>
+                          <div><label className="text-xs font-bold text-gray-500 block mb-1">İlçe</label><input required value={currentOffice.district || ''} onChange={e => setCurrentOffice({...currentOffice, district: e.target.value})} className={inputClass} placeholder="Örn: Merkez" /></div>
+                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Merkez/Şube</label>
+                              <select value={currentOffice.isHeadquarters ? 'true' : 'false'} onChange={e => setCurrentOffice({...currentOffice, isHeadquarters: e.target.value === 'true'})} className={inputClass}>
+                                  <option value="false">Şube Ofis</option>
+                                  <option value="true">Merkez Ofis</option>
+                              </select>
+                          </div>
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Telefon (Sabit)</label><input required value={currentOffice.phone || ''} onChange={e => setCurrentOffice({...currentOffice, phone: e.target.value})} className={inputClass} placeholder="+90..." /></div>
+                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Telefon 2 (Mobil)</label><input value={currentOffice.phone2 || ''} onChange={e => setCurrentOffice({...currentOffice, phone2: e.target.value})} className={inputClass} placeholder="+90..." /></div>
+                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Whatsapp</label><input value={currentOffice.whatsapp || ''} onChange={e => setCurrentOffice({...currentOffice, whatsapp: e.target.value})} className={inputClass} placeholder="+90..." /></div>
+                          <div><label className="text-xs font-bold text-gray-500 block mb-1">Çalışma Saatleri</label><input value={currentOffice.workingHours || ''} onChange={e => setCurrentOffice({...currentOffice, workingHours: e.target.value})} className={inputClass} placeholder="Pzt-Cmt: 09:00 - 19:00" /></div>
+                      </div>
+
                       <div><label className="text-xs font-bold text-gray-500 block mb-1">Adres</label><textarea required value={currentOffice.address || ''} onChange={e => setCurrentOffice({...currentOffice, address: e.target.value})} className={inputClass} rows={2} /></div>
-                      <div><label className="text-xs font-bold text-gray-500 block mb-1">Resim URL</label><input required value={currentOffice.image || ''} onChange={e => setCurrentOffice({...currentOffice, image: e.target.value})} className={inputClass} placeholder="https://..." /></div>
-                      <div><label className="text-xs font-bold text-gray-500 block mb-1">Harita URL (Google Maps)</label><input value={currentOffice.locationUrl || ''} onChange={e => setCurrentOffice({...currentOffice, locationUrl: e.target.value})} className={inputClass} /></div>
-                      <div><label className="text-xs font-bold text-gray-500 block mb-1">Açıklama</label><textarea value={currentOffice.description || ''} onChange={e => setCurrentOffice({...currentOffice, description: e.target.value})} className={inputClass} rows={3} /></div>
                       
-                      <button type="submit" className="w-full bg-dies-blue text-white py-3 rounded-lg font-bold hover:bg-blue-900 transition-colors">Kaydet</button>
+                      {/* Image Upload Section */}
+                      <div>
+                          <label className="text-xs font-bold text-gray-500 block mb-1">Ofis Ana Görseli</label>
+                          <div 
+                              onClick={() => !isCompressing && fileInputRef.current?.click()}
+                              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all relative ${isCompressing ? 'opacity-50' : 'hover:border-dies-blue hover:bg-gray-50'}`}
+                          >
+                               {isCompressing ? (
+                                   <div className="flex flex-col items-center justify-center text-dies-blue">
+                                       <RefreshCw className="animate-spin mb-2 w-8 h-8" />
+                                       <p className="font-bold text-sm">Görsel İşleniyor (%80 WebP)...</p>
+                                   </div>
+                               ) : previewImage ? (
+                                   <div className="relative group">
+                                       <img src={previewImage} alt="Preview" className="h-40 mx-auto object-cover rounded-lg" />
+                                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
+                                           <span className="text-white font-bold text-sm">Değiştirmek için tıkla</span>
+                                       </div>
+                                   </div>
+                               ) : (
+                                   <>
+                                       <UploadCloud className="mx-auto mb-2 w-10 h-10 text-gray-400" />
+                                       <p className="font-bold text-sm text-gray-600">Görsel Seç veya Sürükle</p>
+                                       <p className="text-xs text-gray-400 mt-1">Otomatik WebP Sıkıştırma</p>
+                                   </>
+                               )}
+                               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleOfficeImageChange} className="hidden" disabled={isCompressing} />
+                          </div>
+                      </div>
+
+                      <div><label className="text-xs font-bold text-gray-500 block mb-1">Harita URL (Google Maps)</label><input value={currentOffice.locationUrl || ''} onChange={e => setCurrentOffice({...currentOffice, locationUrl: e.target.value})} className={inputClass} placeholder="https://maps.app.goo.gl/..." /></div>
+                      <div><label className="text-xs font-bold text-gray-500 block mb-1">Açıklama</label><textarea value={currentOffice.description || ''} onChange={e => setCurrentOffice({...currentOffice, description: e.target.value})} className={inputClass} rows={3} placeholder="Ofis hakkında kısa bilgi..." /></div>
+                      
+                      <button disabled={isSavingOffice || isCompressing} type="submit" className="w-full bg-dies-blue text-white py-3 rounded-lg font-bold hover:bg-blue-900 transition-colors flex items-center justify-center gap-2">
+                          {(isSavingOffice || isCompressing) ? <RefreshCw className="animate-spin" /> : <Save size={18} />} 
+                          Kaydet
+                      </button>
                   </form>
               </div>
           </div>

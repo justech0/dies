@@ -106,9 +106,9 @@ const Navbar = () => {
                      </button>
                      <Link 
                         to="/ilan-ver"
-                        className="flex items-center gap-2 bg-dies-red text-white px-5 py-2.5 rounded-full font-bold hover:bg-red-700 transition-all transform hover:scale-105 text-sm shadow-lg shadow-dies-red/20"
+                        className="flex items-center gap-2 bg-dies-red text-white px-6 py-3 rounded-full font-bold transition-all transform hover:scale-110 active:scale-95 text-sm shadow-lg shadow-dies-red/20 hover:shadow-xl hover:shadow-dies-red/40"
                     >
-                        <PlusCircle size={16} />
+                        <PlusCircle size={18} />
                         İlan Ekle
                     </Link>
                 </div>

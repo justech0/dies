@@ -114,7 +114,7 @@ export const AdvisorDetail = () => {
                     )}
                     {activeTab === 'about' && (
                         <div className="bg-white p-10 rounded-2xl border border-gray-100 shadow-soft max-w-4xl mx-auto">
-                            <h3 className="text-2xl font-bold mb-6 text-dies-dark">Profesyonel Biyografi</h3>
+                            <h3 className="text-2xl font-bold mb-6 text-dies-dark">Biyografi</h3>
                             <p className="leading-8 text-gray-600 whitespace-pre-line text-lg">{advisor.about || "Danışman hakkında detaylı bilgi bulunmamaktadır."}</p>
                             <div className="mt-10 pt-10 border-t border-gray-100">
                                 <h4 className="font-bold mb-6 text-dies-dark uppercase tracking-wide text-sm">Uzmanlık Alanları</h4>
