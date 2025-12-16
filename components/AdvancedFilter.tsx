@@ -69,6 +69,8 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
                 <option value="Tümü">Tümü</option>
                 <option value="Satılık">Satılık</option>
                 <option value="Kiralık">Kiralık</option>
+                <option value="Satıldı">Satıldı</option>
+                <option value="Kiralandı">Kiralandı</option>
             </select>
         </div>
         <div>

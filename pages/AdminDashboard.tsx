@@ -34,7 +34,8 @@ export const AdminDashboard = () => {
   const [listingFilters, setListingFilters] = useState({
       term: '', // Title or ID
       advisorId: '',
-      roomCount: ''
+      roomCount: '',
+      status: '' // New status filter
   });
   const [filteredListings, setFilteredListings] = useState<Property[]>(MOCK_PROPERTIES);
   
@@ -101,7 +102,7 @@ export const AdminDashboard = () => {
   const handleSaveAdvisor = (e: React.FormEvent) => {
       e.preventDefault();
       const newAdvisorData: Advisor = {
-          id: editingAdvisor ? editingAdvisor.id : advisors.length + 100,
+          id: editingAdvisor ? editingAdvisor.id : Math.floor(Math.random() * 10000) + 2000,
           name: advisorForm.name,
           role: advisorForm.role,
           phone: advisorForm.phone,
@@ -129,6 +130,14 @@ export const AdminDashboard = () => {
           setAdvisors(advisors.filter(a => a.id !== id));
           const index = MOCK_ADVISORS.findIndex(a => a.id === id);
           if (index !== -1) MOCK_ADVISORS.splice(index, 1);
+          
+          // Also demote in Users if linked
+          const userIdx = MOCK_USERS.findIndex(u => u.id === id);
+          if (userIdx !== -1) {
+              MOCK_USERS[userIdx].role = 'user';
+              MOCK_USERS[userIdx].type = 'user';
+              setUsers([...MOCK_USERS]);
+          }
       }
   };
 
@@ -158,7 +167,9 @@ export const AdminDashboard = () => {
                           role: 'Gayrimenkul Danışmanı',
                           phone: currentUserData.phone || '',
                           image: currentUserData.image || 'https://via.placeholder.com/150',
-                          stats: { totalSales: 0, activeListings: 0, experience: 0 }
+                          stats: { totalSales: 0, activeListings: 0, experience: 0 },
+                          about: 'Dies Gayrimenkul profesyonel danışmanı.',
+                          specializations: ['Genel Gayrimenkul']
                       });
                   }
               } else {
@@ -191,11 +202,14 @@ export const AdminDashboard = () => {
       if (listingFilters.roomCount) {
           results = results.filter(p => p.bedrooms === listingFilters.roomCount);
       }
+      if (listingFilters.status) {
+          results = results.filter(p => p.type === listingFilters.status);
+      }
       setFilteredListings(results);
   };
 
   const handleClearListingFilter = () => {
-      setListingFilters({ term: '', advisorId: '', roomCount: '' });
+      setListingFilters({ term: '', advisorId: '', roomCount: '', status: '' });
       setFilteredListings(allListings);
   };
 
@@ -206,6 +220,19 @@ export const AdminDashboard = () => {
          const index = MOCK_PROPERTIES.findIndex(p => p.id === id);
          if (index !== -1) MOCK_PROPERTIES.splice(index, 1);
       }
+  };
+
+  const handleRejectListing = (id: number) => {
+      const reason = window.prompt("İlanı reddetme sebebini giriniz (Opsiyonel):");
+      if (reason === null) return; // User cancelled
+
+      // Remove from list
+      setAllListings(prev => prev.filter(p => p.id !== id));
+      setFilteredListings(prev => prev.filter(p => p.id !== id));
+      
+      // Remove from Mock Data
+      const index = MOCK_PROPERTIES.findIndex(p => p.id === id);
+      if (index !== -1) MOCK_PROPERTIES.splice(index, 1);
   };
   
   // LISTING APPROVALS
@@ -224,8 +251,31 @@ export const AdminDashboard = () => {
 
   // OFFICE APPLICATIONS
   const handleOfficeApprove = (appId: number) => {
-      setOfficeApplications(prev => prev.map(app => app.id === appId ? { ...app, status: 'approved' } : app));
-      // In real app, create Office object
+      const app = officeApplications.find(a => a.id === appId);
+      if(!app) return;
+
+      if(window.confirm(`${app.firstName} ${app.lastName} adlı kişinin Ofis (Bayilik) başvurusunu onaylıyor musunuz? Bu işlem otomatik olarak yeni bir ofis oluşturacaktır.`)) {
+          // 1. Update status
+          setOfficeApplications(prev => prev.map(a => a.id === appId ? { ...a, status: 'approved' } : a));
+          
+          // 2. Create new Office
+          const newOffice: Office = {
+              id: Math.floor(Math.random() * 10000) + 200,
+              name: `Dies ${app.city} Ofisi (${app.firstName} ${app.lastName})`,
+              city: app.city,
+              district: 'Merkez', // Defaulting
+              address: `${app.city}, Türkiye`,
+              phone: app.phone,
+              workingHours: '09:00 - 18:00',
+              image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200',
+              isHeadquarters: false,
+              description: `Dies Gayrimenkul ${app.city} temsilciliği.`
+          };
+          
+          MOCK_OFFICES.push(newOffice);
+          setOffices([...MOCK_OFFICES]);
+          alert("Ofis başvurusu onaylandı ve Ofisler listesine eklendi.");
+      }
   };
 
   const handleRejectOfficeApp = (appId: number) => {
@@ -242,24 +292,41 @@ export const AdminDashboard = () => {
       const app = advisorApplications.find(a => a.id === appId);
       if (!app) return;
       
-      if(window.confirm(`${app.firstName} ${app.lastName} adlı kişinin danışmanlık başvurusunu onaylıyor musunuz?`)) {
+      if(window.confirm(`${app.firstName} ${app.lastName} adlı kişinin danışmanlık başvurusunu onaylıyor musunuz? Bu işlem kullanıcıyı oluşturacak ve danışman listesine ekleyecektir.`)) {
           // 1. Mark App as Approved
           setAdvisorApplications(prev => prev.map(a => a.id === appId ? { ...a, status: 'approved' } : a));
           
-          // 2. Create User if not exists (mock logic) or assume user exists. 
-          // For demo, we just add to MOCK_ADVISORS directly
+          // 2. Generate new ID
+          const newId = Math.floor(Math.random() * 10000) + 2000;
+
+          // 3. Create User (for login)
+          const newUser: User = {
+              id: newId,
+              name: `${app.firstName} ${app.lastName}`,
+              email: app.email,
+              role: 'advisor',
+              type: 'advisor',
+              phone: app.phone,
+              image: 'https://via.placeholder.com/400'
+          };
+          MOCK_USERS.push(newUser);
+          setUsers([...MOCK_USERS]);
+
+          // 4. Create Advisor (for public list)
           const newAdvisor: Advisor = {
-              id: Math.floor(Math.random() * 1000) + 2000,
+              id: newId,
               name: `${app.firstName} ${app.lastName}`,
               role: 'Gayrimenkul Danışmanı',
               phone: app.phone,
               image: 'https://via.placeholder.com/400',
-              stats: { totalSales: 0, activeListings: 0, experience: 0 }
+              stats: { totalSales: 0, activeListings: 0, experience: app.experience === 'Evet' ? 2 : 0 },
+              about: `${app.education} mezunu. Dies Gayrimenkul ailesinin yeni üyesi.`,
+              specializations: ['Konut Satış']
           };
           MOCK_ADVISORS.push(newAdvisor);
           setAdvisors([...MOCK_ADVISORS]);
           
-          alert("Başvuru onaylandı ve danışman listesine eklendi.");
+          alert("Başvuru onaylandı. Kullanıcı oluşturuldu ve danışman listesine eklendi. (Giriş için email adresi kullanılır).");
       }
   };
   
@@ -508,7 +575,7 @@ export const AdminDashboard = () => {
         {activeTab === 'all-listings' && (
             <div>
                 <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-6 pb-6 border-b border-gray-100">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
                         <div>
                             <label className={labelClass}>Arama (Başlık / İlan No)</label>
                             <div className="relative">
@@ -533,6 +600,21 @@ export const AdminDashboard = () => {
                                 {advisors.map(adv => (
                                     <option key={adv.id} value={adv.id}>{adv.name}</option>
                                 ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelClass}>Durum</label>
+                            <select 
+                                className={inputClass}
+                                value={listingFilters.status}
+                                onChange={(e) => setListingFilters({...listingFilters, status: e.target.value})}
+                            >
+                                <option value="">Tümü</option>
+                                <option value="Satılık">Satılık</option>
+                                <option value="Kiralık">Kiralık</option>
+                                <option value="Satıldı">Satıldı</option>
+                                <option value="Kiralandı">Kiralandı</option>
+                                <option value="pending">Onay Bekliyor</option>
                             </select>
                         </div>
                         <div>
@@ -676,7 +758,7 @@ export const AdminDashboard = () => {
                                                             Onayla
                                                         </button>
                                                         <button 
-                                                            onClick={() => handleDeleteListing(p.id)}
+                                                            onClick={() => handleRejectListing(p.id)}
                                                             className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs font-bold"
                                                         >
                                                             Reddet

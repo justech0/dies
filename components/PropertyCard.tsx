@@ -37,7 +37,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       <div className={`h-1 w-full ${property.type === 'Satılık' ? 'bg-dies-red' : 'bg-dies-blue'}`}></div>
 
       {/* Image */}
-      <div className="relative h-64 overflow-hidden">
+      {/* Increased height to h-72 for bigger visual impact */}
+      <div className="relative h-72 overflow-hidden">
         <img 
             src={property.image} 
             alt={property.title} 

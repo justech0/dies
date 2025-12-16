@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 // @ts-ignore
 import { useParams } from 'react-router-dom';
 import { MOCK_ADVISORS, MOCK_PROPERTIES } from '../services/mockData';
 import { PropertyCard } from '../components/PropertyCard';
-import { Phone, Mail, MessageCircle, MapPin, Award, UserCheck } from 'lucide-react';
+import { Phone, MessageCircle, MapPin, Award, Layout } from 'lucide-react';
 import { DiesLogoIcon } from '../components/Icons';
 
 export const AdvisorDetail = () => {
@@ -15,6 +16,10 @@ export const AdvisorDetail = () => {
   if (!advisor) return <div className="pt-32 text-center">Danışman Bulunamadı</div>;
   
   const listings = MOCK_PROPERTIES.filter(p => p.advisorId === advisor.id);
+  
+  // Calculate Dynamic Stats
+  const activeListingsCount = listings.filter(p => p.type !== 'Satıldı' && p.type !== 'Kiralandı' && p.type !== 'pending').length;
+  const experienceYears = advisor.stats?.experience || 1; // Default fallback
 
   // Clean phone number for WhatsApp link
   const whatsappNumber = advisor.phone.replace(/[^0-9]/g, '');
@@ -57,13 +62,17 @@ export const AdvisorDetail = () => {
                                 <MapPin size={18} className="text-dies-blue" />
                                 <span>Batman, Merkez Ofis</span>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <Award size={18} className="text-dies-blue" />
-                                <span>{advisor.stats?.experience || 5}+ Yıl Deneyim</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <UserCheck size={18} className="text-dies-blue" />
-                                <span>{advisor.stats?.clientSatisfaction || 5}/5 Müşteri Memnuniyeti</span>
+                            
+                            {/* Dynamic Stats in Header - Removed Sales Count */}
+                            <div className="flex gap-6 mt-2">
+                                <div className="flex items-center gap-2 text-dies-dark font-bold">
+                                    <Layout size={18} className="text-dies-blue" />
+                                    <span>{activeListingsCount} Aktif İlan</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-dies-dark font-bold">
+                                    <Award size={18} className="text-green-600" />
+                                    <span>{experienceYears}+ Yıl Deneyim</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -139,11 +148,13 @@ export const AdvisorDetail = () => {
                             <div className="mt-10 pt-10 border-t border-gray-100">
                                 <h4 className="font-bold mb-6 text-dies-dark uppercase tracking-wide text-sm">Uzmanlık Alanları</h4>
                                 <div className="flex flex-wrap gap-3">
-                                    {['Lüks Konut', 'Ticari Gayrimenkul', 'Yatırım Danışmanlığı', 'Arsa', 'Proje Satış'].map((tag, i) => (
+                                    {advisor.specializations && advisor.specializations.length > 0 ? advisor.specializations.map((tag, i) => (
                                         <span key={i} className="px-5 py-2.5 rounded-full text-sm font-bold bg-gray-50 text-dies-blue border border-gray-100 hover:bg-dies-blue hover:text-white transition-colors cursor-default">
                                             {tag}
                                         </span>
-                                    ))}
+                                    )) : (
+                                        <span className="text-gray-500 italic">Belirtilmemiş</span>
+                                    )}
                                 </div>
                             </div>
                         </div>

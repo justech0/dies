@@ -9,9 +9,20 @@ import { DiesLogoIcon } from './Icons';
 
 const MotionDiv = motion.div as any;
 
-const BrandLogo = () => (
-    <div className="flex items-center gap-2 transition-transform hover:scale-105">
-        <DiesLogoIcon className="h-14 w-auto" />
+interface BrandLogoProps {
+    isTransparent: boolean;
+}
+
+const BrandLogo: React.FC<BrandLogoProps> = ({ isTransparent }) => (
+    <div className={`
+        flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 
+        p-2 rounded-xl border 
+        ${isTransparent 
+            ? 'border-white/30 bg-white/10 backdrop-blur-sm shadow-lg' 
+            : 'border-gray-200 bg-white/50 shadow-sm'}
+    `}>
+        {/* Logo size slightly adjusted to fit within the border nicely */}
+        <DiesLogoIcon className="h-14 md:h-20 w-auto drop-shadow-sm" />
     </div>
 );
 
@@ -49,21 +60,23 @@ const Navbar = () => {
   ];
 
   const navbarClasses = isHome && !isScrolled 
-    ? 'bg-gradient-to-b from-black/50 to-transparent py-5' 
-    : 'glass-nav shadow-soft py-3';
+    ? 'bg-gradient-to-b from-black/70 to-transparent py-4 md:py-6' 
+    : 'glass-nav shadow-soft py-2 md:py-3';
 
   // White text on transparent header, Blue text on sticky/white header
   const textClasses = isHome && !isScrolled
     ? 'text-white hover:text-gray-200 drop-shadow-md'
     : 'text-dies-blue hover:text-dies-red';
 
+  const isTransparent = isHome && !isScrolled;
+
   return (
     <>
       <nav className={`fixed w-full z-50 transition-all duration-300 ${navbarClasses}`}>
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
-          {/* Logo Section - Added white background on Hero for logo visibility */}
-          <Link to="/" className={`flex-shrink-0 transition-all duration-300 ${isHome && !isScrolled ? 'bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg' : ''}`}>
-             <BrandLogo />
+          {/* Logo Section */}
+          <Link to="/" className="flex-shrink-0 transition-all duration-300 py-1">
+             <BrandLogo isTransparent={isTransparent} />
           </Link>
 
           {/* Desktop Menu */}
@@ -140,7 +153,7 @@ const Navbar = () => {
           >
             <div className="p-6 flex justify-between items-center border-b border-gray-100">
               <div className="flex-shrink-0">
-                  <BrandLogo />
+                  <BrandLogo isTransparent={false} />
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-dies-blue hover:text-dies-red">
                 <X size={32} />
@@ -201,10 +214,13 @@ const Navbar = () => {
 
               <div className="mt-auto pt-8">
                 <p className="text-gray-400 text-xs uppercase tracking-widest mb-4">İletişim</p>
-                <div className="flex items-start gap-3 mb-4 text-dies-dark font-medium">
-                    <Phone size={18} className="text-dies-red mt-1" />
-                    <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4 mb-4 text-dies-dark font-medium">
+                    <div className="flex items-center gap-3">
+                        <Phone size={18} className="text-dies-red" />
                         <a href="tel:+905438682668" className="hover:text-dies-blue">+90 543 868 26 68</a>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Phone size={18} className="text-dies-red" />
                         <a href="tel:+905059969612" className="hover:text-dies-blue">+90 505 996 96 12</a>
                     </div>
                 </div>
@@ -279,12 +295,13 @@ const Footer = () => {
                       <span>Bahçelievler, Mimar Sinan Cd., Batman</span>
                    </a>
                 </li>
-                <li className="flex items-start gap-3">
-                    <Phone className="text-dies-red shrink-0 mt-1" size={16} />
-                    <div className="flex flex-col gap-1">
-                        <a href="tel:+905438682668" className="hover:text-white transition-colors">+90 543 868 26 68</a>
-                        <a href="tel:+905059969612" className="hover:text-white transition-colors">+90 505 996 96 12</a>
-                    </div>
+                <li className="flex items-center gap-3">
+                    <Phone className="text-dies-red shrink-0" size={16} />
+                    <a href="tel:+905438682668" className="hover:text-white transition-colors">+90 543 868 26 68</a>
+                </li>
+                <li className="flex items-center gap-3">
+                    <Phone className="text-dies-red shrink-0" size={16} />
+                    <a href="tel:+905059969612" className="hover:text-white transition-colors">+90 505 996 96 12</a>
                 </li>
                 <li className="flex items-center gap-3">
                     <Mail className="text-dies-red shrink-0" size={16} />
@@ -327,6 +344,12 @@ const Footer = () => {
 };
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <div className="min-h-screen flex flex-col font-sans bg-dies-light text-dies-dark">
       <Navbar />
