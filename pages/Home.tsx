@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ArrowRight, Home as HomeIcon, TrendingUp, Shield } from 'lucide-react';
+import { Search, ArrowRight, Home as HomeIcon, TrendingUp, Shield, Inbox } from 'lucide-react';
 import { api } from '../services/api';
 import { Property, Advisor } from '../types';
 import { PropertyCard } from '../components/PropertyCard';
@@ -22,6 +21,7 @@ export const Home = () => {
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [founders, setFounders] = useState<Advisor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
   // Default fallback settings in case API fails or not set yet
   const [heroSettings, setHeroSettings] = useState({
@@ -31,20 +31,26 @@ export const Home = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+        setIsLoading(true);
         try {
             // 1. Fetch Featured Properties
             const props = await api.properties.getList({ is_featured: 1 });
-            // Sort by date descending and take top 9
-            const sorted = props.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 9);
-            setFeaturedProperties(sorted);
+            if (props && Array.isArray(props)) {
+              const sorted = props.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 9);
+              setFeaturedProperties(sorted);
+            }
 
-            // 2. Fetch Advisors (Filter for founders/leaders if API returns role info)
+            // 2. Fetch Advisors
             const allAdvisors = await api.advisors.getList();
-            const founderList = allAdvisors.filter(a => a.isFounder || a.role.includes('Kurucu') || a.role.includes('Broker'));
-            setFounders(founderList.length > 0 ? founderList : allAdvisors.slice(0, 3));
+            if (allAdvisors && Array.isArray(allAdvisors)) {
+              const founderList = allAdvisors.filter(a => a.isFounder || a.role.includes('Kurucu') || a.role.includes('Broker'));
+              setFounders(founderList.length > 0 ? founderList : allAdvisors.slice(0, 3));
+            }
 
         } catch (error) {
             console.error("Failed to load home data", error);
+        } finally {
+            setIsLoading(false);
         }
     };
     fetchData();
@@ -96,7 +102,7 @@ export const Home = () => {
                     </p>
                 </MotionDiv>
 
-                {/* Search Bar - Responsive Fix */}
+                {/* Search Bar */}
                 <MotionForm 
                     onSubmit={handleSearch}
                     initial={{ opacity: 0, y: 30 }}
@@ -125,24 +131,29 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* FEATURED LISTINGS - GRID LAYOUT */}
-      {featuredProperties.length > 0 && (
-          <section className="py-16 md:py-24 bg-dies-light">
-            <div className="container mx-auto px-4">
-                <div className="flex flex-col md:flex-row justify-between items-end mb-8 md:mb-12 gap-4">
-                    <div className="w-full md:w-auto">
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-dies-dark mb-3">
-                            Öne Çıkan <span className="text-dies-blue">Fırsatlar</span>
-                        </h2>
-                        <p className="text-dies-slate text-base md:text-lg">Portföyümüzdeki en güncel ve seçkin ilanlar.</p>
-                    </div>
-                    
-                    <Link to="/ilanlar" className="w-full md:w-auto justify-center px-6 py-3 bg-white text-dies-blue font-bold rounded-full shadow-sm border border-gray-100 hover:shadow-md hover:text-dies-red transition-all flex items-center gap-2">
-                        Tüm İlanları Gör <ArrowRight size={18} />
-                    </Link>
+      {/* FEATURED LISTINGS */}
+      <section className="py-16 md:py-24 bg-dies-light">
+        <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-8 md:mb-12 gap-4">
+                <div className="w-full md:w-auto">
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-dies-dark mb-3">
+                        Öne Çıkan <span className="text-dies-blue">Fırsatlar</span>
+                    </h2>
+                    <p className="text-dies-slate text-base md:text-lg">Portföyümüzdeki en güncel ve seçkin ilanlar.</p>
                 </div>
                 
-                {/* Updated grid to 3 columns on large screens for standard sizing */}
+                <Link to="/ilanlar" className="w-full md:w-auto justify-center px-6 py-3 bg-white text-dies-blue font-bold rounded-full shadow-sm border border-gray-100 hover:shadow-md hover:text-dies-red transition-all flex items-center gap-2">
+                    Tüm İlanları Gör <ArrowRight size={18} />
+                </Link>
+            </div>
+            
+            {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="h-96 rounded-2xl bg-gray-200 animate-pulse"></div>
+                    ))}
+                </div>
+            ) : featuredProperties.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {featuredProperties.map((prop, index) => (
                         <MotionDiv 
@@ -157,9 +168,15 @@ export const Home = () => {
                         </MotionDiv>
                     ))}
                 </div>
-            </div>
-          </section>
-      )}
+            ) : (
+                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 text-center">
+                    <Inbox className="text-gray-300 w-16 h-16 mb-4" />
+                    <h3 className="text-xl font-bold text-dies-dark mb-1">Henüz ilan yok</h3>
+                    <p className="text-gray-400">Yeni fırsatlar çok yakında burada olacak.</p>
+                </div>
+            )}
+        </div>
+      </section>
 
       {/* VALUES */}
       <section className="py-16 md:py-20 bg-white">
@@ -182,44 +199,45 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* FOUNDERS / TEAM */}
-      <section className="py-16 md:py-24 bg-dies-blue text-white relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-dies-red/20 rounded-full blur-[80px] pointer-events-none"></div>
+      {/* TEAM */}
+      {founders.length > 0 && (
+          <section className="py-16 md:py-24 bg-dies-blue text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-dies-red/20 rounded-full blur-[80px] pointer-events-none"></div>
 
-        <div className="container mx-auto px-4 relative z-10">
-             <div className="text-center mb-12 md:mb-16">
-                 <h2 className="text-3xl md:text-5xl font-extrabold mb-4">Kurucu Ortaklar</h2>
-                 <p className="text-slate-300 text-base md:text-lg max-w-2xl mx-auto">Sektörün öncü isimleri ile güvenilir yatırımın adresi.</p>
-             </div>
-             
-             <div className="flex flex-wrap justify-center gap-8 md:gap-10">
-                {founders.map((founder, i) => (
-                    <Link to={`/danisman/${founder.id}`} key={founder.id} className="w-full md:w-auto">
-                        <MotionDiv 
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.2 }}
-                            className="group relative w-full md:w-96 bg-white/10 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/10 hover:bg-white hover:border-white transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
-                        >
-                            <div className="w-32 h-32 md:w-36 md:h-36 mx-auto rounded-full p-1 bg-gradient-to-br from-dies-red to-dies-blue mb-6 group-hover:scale-105 transition-transform shadow-lg">
-                                <img src={founder.image} alt={founder.name} className="w-full h-full object-cover rounded-full border-4 border-white" />
-                            </div>
-                            <div className="text-center">
-                                <h3 className="text-xl md:text-2xl font-bold text-white group-hover:text-dies-dark mb-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis px-1">{founder.name}</h3>
-                                <p className="text-dies-red font-bold uppercase tracking-widest text-xs mb-6 bg-white/10 inline-block px-3 py-1 rounded-full group-hover:bg-dies-red/10 group-hover:text-dies-red transition-colors">{founder.role}</p>
-                                
-                                <div className="inline-block px-6 py-2 rounded-full border border-white/30 text-white text-sm font-bold group-hover:bg-dies-blue group-hover:border-dies-blue group-hover:text-white transition-all">
-                                    Profili İncele
+            <div className="container mx-auto px-4 relative z-10">
+                 <div className="text-center mb-12 md:mb-16">
+                     <h2 className="text-3xl md:text-5xl font-extrabold mb-4">Kurucu Ortaklar</h2>
+                     <p className="text-slate-300 text-base md:text-lg max-w-2xl mx-auto">Sektörün öncü isimleri ile güvenilir yatırımın adresi.</p>
+                 </div>
+                 
+                 <div className="flex flex-wrap justify-center gap-8 md:gap-10">
+                    {founders.map((founder, i) => (
+                        <Link to={`/danisman/${founder.id}`} key={founder.id} className="w-full md:w-auto">
+                            <MotionDiv 
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.2 }}
+                                className="group relative w-full md:w-96 bg-white/10 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/10 hover:bg-white hover:border-white transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
+                            >
+                                <div className="w-32 h-32 md:w-36 md:h-36 mx-auto rounded-full p-1 bg-gradient-to-br from-dies-red to-dies-blue mb-6 group-hover:scale-105 transition-transform shadow-lg">
+                                    <img src={founder.image} alt={founder.name} className="w-full h-full object-cover rounded-full border-4 border-white" />
                                 </div>
-                            </div>
-                        </MotionDiv>
-                    </Link>
-                ))}
-             </div>
-        </div>
-      </section>
+                                <div className="text-center">
+                                    <h3 className="text-xl md:text-2xl font-bold text-white group-hover:text-dies-dark mb-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis px-1">{founder.name}</h3>
+                                    <p className="text-dies-red font-bold uppercase tracking-widest text-xs mb-6 bg-white/10 inline-block px-3 py-1 rounded-full group-hover:bg-dies-red/10 group-hover:text-dies-red transition-colors">{founder.role}</p>
+                                    
+                                    <div className="inline-block px-6 py-2 rounded-full border border-white/30 text-white text-sm font-bold group-hover:bg-dies-blue group-hover:border-dies-blue group-hover:text-white transition-all">
+                                        Profili İncele
+                                    </div>
+                                </div>
+                            </MotionDiv>
+                        </Link>
+                    ))}
+                 </div>
+            </div>
+          </section>
+      )}
 
       {/* CTA */}
       <section className="py-16 md:py-20 bg-white">

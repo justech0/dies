@@ -1,18 +1,16 @@
+# Dies Gayrimenkul Platformu (V3.4)
 
-# Dies Gayrimenkul Platformu (V3.3)
-
-Batman'ın öncü gayrimenkul danışmanlık platformu.
+Batman'ın öncü gayrimenkul danışmanlık platformu için modernize edilmiş frontend katmanı.
 
 ## 🚀 Başlangıç
 
 ### Gereksinimler
 - Node.js (v18+)
-- PHP (v8.1+) (Backend için)
-- MySQL
+- Backend API (Codex tarafından spec dökümanına göre yazılacak)
 
 ### Kurulum
 
-1. **Frontend**:
+1. **Paketleri Yükleyin**:
    ```bash
    npm install
    ```
@@ -22,20 +20,21 @@ Batman'ın öncü gayrimenkul danışmanlık platformu.
    npm run dev
    ```
 
-3. **Build**:
+3. **Production Build**:
    ```bash
    npm run build
    ```
 
-## 🛠 Backend Entegrasyonu
+## 🛠 Backend Spec
 
-Bu proje gerçek bir API üzerinden çalışacak şekilde yapılandırılmıştır. Backend geliştiricisi (Codex) için gerekli tüm teknik detaylar `BACKEND_SPEC_V3_3.md` dosyasında mevcuttur.
+Bu proje gerçek bir API üzerinden çalışacak şekilde yapılandırılmıştır. Backend geliştiricisi için gerekli tüm teknik detaylar `BACKEND_SPEC_V3_4.md` dosyasında mevcuttur.
 
-**Önemli**: `.env` dosyasında `VITE_API_URL` değişkenini backend adresinize göre ayarlayın.
-Örn: `VITE_API_URL=http://localhost:8000`
+**API Bağlantısı**: `.env` dosyasında `VITE_API_URL` değişkenini backend adresinize göre ayarlayın.
+Örn: `VITE_API_URL=https://api.diesgayrimenkul.com`
 
-## 💎 Özellikler
-- **WebP Sıkıştırma**: Tüm yüklenen görseller frontend tarafında %75 kalite ile WebP formatına dönüştürülür.
-- **Admin Kontrolü**: İlan onay süreci, kullanıcı rol yönetimi ve admin tarafından şifre sıfırlama.
-- **Mobil Uyumlu**: Tamamen responsive tasarım.
-- **Filtreleme**: İl/İlçe/Mahalle bazlı gelişmiş arama.
+## 💎 Temel Özellikler
+- **Gerçek Zamanlı Veri**: Artık mock data içermez, tüm veriler API üzerinden gelir.
+- **Smart Navbar**: Logo ve menü öğeleri en uygun görsel dengede gruplandırıldı.
+- **WebP Sıkıştırma**: Yüklenen tüm görseller %75 kalite ile istemci tarafında optimize edilir.
+- **Hata Yönetimi**: API 404/500 hataları için zarif boş-stateler ve mesajlar.
+- **Admin Kontrolü**: Kullanıcı şifrelerini güvenli bir şekilde sıfırlama ve rol yönetimi.

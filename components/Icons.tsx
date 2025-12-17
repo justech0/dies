@@ -1,17 +1,27 @@
+import React, { useState } from 'react';
 
-import React from 'react';
+// LOGO: Uses /logo.png from the public folder with text fallback
+export const DiesLogoIcon: React.FC<{ className?: string }> = ({ className }) => {
+  const [error, setError] = useState(false);
 
-// LOGO: Uses /logo.png from the public folder.
-export const DiesLogoIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <img 
-    src="/logo.png" 
-    alt="Dies Gayrimenkul" 
-    className={`object-contain ${className}`}
-    onError={(e) => {
-      e.currentTarget.style.display = 'none';
-    }}
-  />
-);
+  if (error) {
+    return (
+      <div className={`flex flex-col items-start leading-none ${className}`}>
+        <span className="text-dies-blue font-black tracking-tighter text-xl md:text-2xl">DİES</span>
+        <span className="text-dies-red font-bold text-[8px] md:text-[10px] tracking-widest mt-[-2px]">GAYRİMENKUL</span>
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src="/logo.png" 
+      alt="Dies Gayrimenkul" 
+      className={`object-contain ${className}`}
+      onError={() => setError(true)}
+    />
+  );
+};
 
 export const LoadingSpinner = () => (
   <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

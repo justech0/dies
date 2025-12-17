@@ -16,12 +16,12 @@ interface BrandLogoProps {
 const BrandLogo: React.FC<BrandLogoProps> = ({ isTransparent }) => (
   <div className={`
     flex items-center justify-center transition-all duration-300 hover:scale-105 
-    p-1.5 rounded-lg border 
+    p-1 md:p-1.5 rounded-lg border 
     ${isTransparent 
-      ? 'border-white/10 bg-white/5 backdrop-blur-md shadow-sm' 
-      : 'border-gray-200 bg-white shadow-xs'}
+      ? 'border-white/5 bg-white/5 backdrop-blur-sm shadow-sm' 
+      : 'border-gray-100 bg-white shadow-xs'}
   `}>
-    <DiesLogoIcon className="h-10 md:h-14 w-auto" />
+    <DiesLogoIcon className="h-8 md:h-12 w-auto" />
   </div>
 );
 
@@ -63,7 +63,7 @@ const Navbar = () => {
     : 'glass-nav shadow-soft py-2 md:py-3';
 
   const textClasses = isHome && !isScrolled
-    ? 'text-white hover:text-white/80 drop-shadow-md'
+    ? 'text-white hover:text-white/80 drop-shadow-sm'
     : 'text-dies-blue hover:text-dies-red';
 
   const isTransparent = isHome && !isScrolled;
@@ -71,69 +71,82 @@ const Navbar = () => {
   return (
     <>
       <nav className={`fixed w-full z-50 transition-all duration-300 ${navbarClasses}`}>
-        <div className="w-full px-4 md:px-8 flex justify-between items-center">
-          {/* Logo Section - Aligned Left */}
-          <Link to="/" className="flex-shrink-0 transition-all duration-300 py-1">
-             <BrandLogo isTransparent={isTransparent} />
-          </Link>
-
-          {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.name} 
-                to={link.path} 
-                className={`text-sm font-bold uppercase tracking-wide transition-colors ${textClasses}`}
-              >
-                {link.name}
-              </Link>
-            ))}
-            
-            {user ? (
-              <div className={`flex items-center gap-4 ml-4 pl-4 border-l ${isHome && !isScrolled ? 'border-white/20' : 'border-gray-200'}`}>
-                 {user.role === 'admin' && (
-                   <Link to="/admin" className={`${textClasses} font-bold text-sm flex items-center gap-1`}>
-                     <LayoutDashboard size={16} /> Panel
-                   </Link>
-                 )}
-                 <Link to="/profil" className={`text-sm font-bold ${textClasses}`}>
-                   {user.name}
-                 </Link>
-                 <button onClick={handleLogout} className={`${isHome && !isScrolled ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-dies-red'}`} title="Çıkış Yap">
-                   <LogOut size={20} />
-                 </button>
-                 <Link 
-                    to="/ilan-ver"
-                    className="flex items-center gap-2 bg-dies-red text-white px-5 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 active:scale-95 text-sm shadow-lg shadow-dies-red/20"
-                >
-                    <PlusCircle size={18} />
-                    İlan Ekle
-                </Link>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 ml-4">
-                <Link 
-                  to="/giris"
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 text-sm shadow-md ${
-                    isHome && !isScrolled 
-                    ? 'bg-white text-dies-blue hover:bg-gray-100' 
-                    : 'bg-dies-blue text-white hover:bg-blue-900'
-                  }`}
-                >
-                  <UserIcon size={16} />
-                  Giriş Yap
-                </Link>
-              </div>
-            )}
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 flex items-center justify-between h-full">
+          
+          {/* Logo Section - Left Aligned */}
+          <div className="flex-shrink-0">
+            <Link to="/" className="transition-all duration-300 block">
+               <BrandLogo isTransparent={isTransparent} />
+            </Link>
           </div>
 
-          {/* Mobile Toggle */}
-          <div className="lg:hidden flex items-center gap-4">
+          {/* Right Section Cluster (Desktop) */}
+          <div className="hidden lg:flex items-center gap-8 xl:gap-12">
+            
+            {/* Desktop Menu Links */}
+            <div className="flex items-center gap-6 xl:gap-8">
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.name} 
+                  to={link.path} 
+                  className={`text-[13px] font-bold uppercase tracking-tight transition-all hover:scale-105 ${textClasses}`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Subtle Group Divider */}
+            <div className={`h-6 w-px ${isTransparent ? 'bg-white/20' : 'bg-gray-200'}`}></div>
+
+            {/* Desktop Actions */}
+            <div className="flex items-center gap-4">
+              {user ? (
+                <>
+                   {user.role === 'admin' && (
+                     <Link to="/admin" className={`${textClasses} font-bold text-xs flex items-center gap-1.5`}>
+                       <LayoutDashboard size={16} /> Panel
+                     </Link>
+                   )}
+                   <Link to="/profil" className={`text-xs font-bold ${textClasses}`}>
+                     {user.name}
+                   </Link>
+                   <button onClick={handleLogout} className={`${isHome && !isScrolled ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-dies-red'}`} title="Çıkış Yap">
+                     <LogOut size={18} />
+                   </button>
+                   <Link 
+                      to="/ilan-ver"
+                      className="flex items-center gap-2 bg-dies-red text-white px-5 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 active:scale-95 text-xs shadow-lg shadow-dies-red/20"
+                  >
+                      <PlusCircle size={16} />
+                      İlan Ekle
+                  </Link>
+                </>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link 
+                    to="/giris"
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 text-xs shadow-md ${
+                      isHome && !isScrolled 
+                      ? 'bg-white text-dies-blue hover:bg-gray-100' 
+                      : 'bg-dies-blue text-white hover:bg-blue-900'
+                    }`}
+                  >
+                    <UserIcon size={14} />
+                    Giriş Yap
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Toggle Button */}
+          <div className="lg:hidden">
             <button 
               onClick={() => setIsMobileMenuOpen(true)} 
               className={`p-2 transition-colors ${isHome && !isScrolled ? 'text-white' : 'text-dies-blue'}`}
             >
-              <Menu size={32} />
+              <Menu size={28} />
             </button>
           </div>
         </div>
@@ -209,28 +222,6 @@ const Navbar = () => {
                   Giriş Yap / Üye Ol
                 </Link>
               )}
-
-              <div className="mt-auto pt-8">
-                <p className="text-gray-400 text-xs uppercase tracking-widest mb-4">İletişim</p>
-                <div className="flex flex-col gap-4 mb-4 text-dies-dark font-medium">
-                  <div className="flex items-center gap-3">
-                    <Phone size={18} className="text-dies-red" />
-                    <a href="tel:+905438682668" className="hover:text-dies-blue">+90 543 868 26 68</a>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone size={18} className="text-dies-red" />
-                    <a href="tel:+905059969612" className="hover:text-dies-blue">+90 505 996 96 12</a>
-                  </div>
-                </div>
-                <div className="flex gap-4 mt-6">
-                  <a href="https://www.instagram.com/diesgayrimenkul/" target="_blank" rel="noreferrer" className="text-dies-blue hover:text-dies-red">
-                    <Instagram size={28} />
-                  </a>
-                  <a href="https://www.facebook.com/diesgayrimenkul/" target="_blank" rel="noreferrer" className="text-dies-blue hover:text-dies-red">
-                    <Facebook size={28} />
-                  </a>
-                </div>
-              </div>
             </div>
           </MotionDiv>
         )}

@@ -1,7 +1,7 @@
 import { Property, User, Advisor, Office, AdvisorApplication, OfficeApplication } from '../types';
 
-// Use process.env as per GenAI guidelines to fix TS error on import.meta.env
-const VITE_API_URL = (process.env as any).VITE_API_URL || '';
+// Fix: Property 'env' does not exist on type 'ImportMeta'. Using any cast to bypass TypeScript error for Vite environment variables.
+const VITE_API_URL = ((import.meta as any).env?.VITE_API_URL || '').replace(/\/$/, '');
 const API_BASE = `${VITE_API_URL}/api`;
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -22,10 +22,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers,
   });
 
-  const result = await response.json().catch(() => ({}));
+  if (response.status === 204) return {} as T;
 
-  if (!response.ok) {
-    const errorMessage = result.error?.message || result.message || `API Error: ${response.status}`;
+  const result = await response.json().catch(() => ({ 
+    success: false, 
+    error: { message: 'Sunucu yanıtı okunamadı.' } 
+  }));
+
+  if (!response.ok || result.success === false) {
+    const errorMessage = result.error?.message || result.message || `İşlem başarısız (Hata: ${response.status})`;
     throw new Error(errorMessage);
   }
 
@@ -43,15 +48,15 @@ export const api = {
       body: JSON.stringify(data),
     }),
     me: () => request<User>('/auth/me'),
-    updateProfile: (data: any) => request<{ success: boolean, user: User }>('/auth/update-profile', {
+    updateProfile: (data: any) => request<{ user: User }>('/auth/update-profile', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-    forgotPassword: (email: string) => request<{ success: boolean; message: string }>('/auth/forgot-password', {
+    forgotPassword: (email: string) => request<{ message: string }>('/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
     }),
-    resetPassword: (data: any) => request<{ success: boolean; message: string }>('/auth/reset-password', {
+    resetPassword: (data: any) => request<{ message: string }>('/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -74,15 +79,15 @@ export const api = {
       return request<Property[]>(`/properties?${params.toString()}`);
     },
     getDetail: (id: string | number) => request<Property>(`/properties/${id}`),
-    create: (data: any) => request<{ success: boolean; id: number }>('/properties', {
+    create: (data: any) => request<{ id: number }>('/properties', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-    update: (id: number, data: any) => request<{ success: boolean }>(`/properties/${id}`, {
-      method: 'POST', // Handled as PATCH in spec, using POST for easier PHP compatibility if needed
+    update: (id: number, data: any) => request<any>(`/properties/${id}`, {
+      method: 'POST',
       body: JSON.stringify(data),
     }),
-    delete: (id: number) => request<{ success: boolean }>(`/properties/${id}`, {
+    delete: (id: number) => request<any>(`/properties/${id}`, {
       method: 'DELETE',
     }),
   },
@@ -103,7 +108,7 @@ export const api = {
       body: JSON.stringify({ reason }),
     }),
     getUsers: () => request<User[]>('/admin/users'),
-    changeRole: (userId: number, role: string) => request(`/admin/users/${userId}/change-role`, {
+    changeRole: (userId: number, role: string) => request(`/admin/users/${userId}/role`, {
       method: 'POST',
       body: JSON.stringify({ role }),
     }),
@@ -112,9 +117,9 @@ export const api = {
     }),
     getAdvisorApplications: () => request<AdvisorApplication[]>('/admin/applications?type=advisor'),
     getOfficeApplications: () => request<OfficeApplication[]>('/admin/applications?type=office'),
-    manageApplication: (id: number, type: 'advisor' | 'office', status: string) => request(`/admin/applications/${id}`, {
+    manageApplication: (id: number, status: string) => request(`/admin/applications/${id}`, {
       method: 'POST',
-      body: JSON.stringify({ type, status })
+      body: JSON.stringify({ status })
     })
   },
 
@@ -125,25 +130,25 @@ export const api = {
 
   offices: {
     getList: () => request<Office[]>('/offices'),
-    create: (data: any) => request<{ success: boolean; id: number }>('/offices', {
+    create: (data: any) => request<{ id: number }>('/offices', {
       method: 'POST',
       body: JSON.stringify(data)
     }),
-    update: (id: number, data: any) => request<{ success: boolean }>(`/offices/${id}`, {
+    update: (id: number, data: any) => request<any>(`/offices/${id}`, {
       method: 'POST',
       body: JSON.stringify(data)
     }),
-    delete: (id: number) => request<{ success: boolean }>(`/offices/${id}`, {
+    delete: (id: number) => request<any>(`/offices/${id}`, {
       method: 'DELETE'
     })
   },
 
   applications: {
-    submitAdvisor: (data: any) => request('/applications?type=advisor', {
+    submitAdvisor: (data: any) => request('/applications/advisor', {
       method: 'POST',
       body: JSON.stringify(data)
     }),
-    submitOffice: (data: any) => request('/applications?type=office', {
+    submitOffice: (data: any) => request('/applications/office', {
       method: 'POST',
       body: JSON.stringify(data)
     })

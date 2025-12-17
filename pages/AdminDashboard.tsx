@@ -4,7 +4,7 @@ import { useAuth } from '../components/AuthContext';
 // @ts-ignore
 import { Link, useNavigate } from 'react-router-dom';
 import { Home, CheckCircle, XCircle, BarChart, Trash2, Clock, Users, Edit, Plus, Image as ImageIcon, Layout, Save, Settings, ShieldAlert, Building, FileText, Eye, MapPin, MessageCircle, Filter, Search, LogOut, Briefcase, UploadCloud, X, List, Phone, RefreshCw, Key, Copy } from 'lucide-react';
-// Added missing import for AnimatePresence
+// @ts-ignore
 import { AnimatePresence } from 'framer-motion';
 import { Property, Advisor, Office, OfficeApplication, AdvisorApplication, User } from '../types';
 import { api } from '../services/api';
@@ -18,7 +18,6 @@ export const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'all-listings' | 'users' | 'offices' | 'settings'>('overview');
   const [userFilterType, setUserFilterType] = useState<'all' | 'advisor'>('all');
   const [selectedAdvisorForListings, setSelectedAdvisorForListings] = useState<User | null>(null);
-  const [selectedApplication, setSelectedApplication] = useState<{ type: 'advisor' | 'office', data: any } | null>(null);
   const [generatedPassModal, setGeneratedPassModal] = useState<{ open: boolean, password?: string, userName?: string }>({ open: false });
 
   const [isEditingOffice, setIsEditingOffice] = useState(false);
@@ -37,19 +36,19 @@ export const AdminDashboard = () => {
   const [officeApplications, setOfficeApplications] = useState<OfficeApplication[]>([]);
   const [advisorApplications, setAdvisorApplications] = useState<AdvisorApplication[]>([]);
 
-  const [listingFilters, setListingFilters] = useState({ term: '', advisorId: '', status: '' });
+  const [listingFilters, setListingFilters] = useState({ term: '', status: '' });
   const [filteredListings, setFilteredListings] = useState<Property[]>([]);
 
   const loadAdminData = async () => {
     try {
       const [statsData, pending, allListingsData, usersData, officesData, advisorApps, officeApps] = await Promise.all([
-        api.admin.getStats(),
-        api.admin.getPendingListings(),
-        api.properties.getList(), 
-        api.admin.getUsers(),
-        api.offices.getList(),
-        api.admin.getAdvisorApplications(),
-        api.admin.getOfficeApplications()
+        api.admin.getStats().catch(() => ({})),
+        api.admin.getPendingListings().catch(() => []),
+        api.properties.getList().catch(() => []), 
+        api.admin.getUsers().catch(() => []),
+        api.offices.getList().catch(() => []),
+        api.admin.getAdvisorApplications().catch(() => []),
+        api.admin.getOfficeApplications().catch(() => [])
       ]);
 
       setStats(statsData);
@@ -146,12 +145,11 @@ export const AdminDashboard = () => {
     navigate('/ilan-ver', { state: { editingProperty: property } });
   };
 
-  const handleApplicationStatus = async (id: number, type: 'advisor' | 'office', status: string) => {
+  const handleApplicationStatus = async (id: number, status: string) => {
     if (window.confirm(`Başvuruyu ${status === 'approved' ? 'onaylamak' : 'reddetmek'} istiyor musunuz?`)) {
       try {
-        await api.admin.manageApplication(id, type, status);
+        await api.admin.manageApplication(id, status);
         loadAdminData();
-        setSelectedApplication(null);
       } catch (e) {
         alert("İşlem başarısız.");
       }
@@ -349,7 +347,6 @@ export const AdminDashboard = () => {
             </div>
         )}
 
-        {/* Similar Approvals & Offices Tabs... */}
         {activeTab === 'approvals' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
@@ -366,9 +363,26 @@ export const AdminDashboard = () => {
                             </div>
                         </div>
                     ))}
+                    {pendingListings.length === 0 && <p className="text-xs text-gray-400 italic">Bekleyen onay bulunmuyor.</p>}
                 </div>
             </div>
-            {/* Applicant lists... */}
+            {/* Advisor Applications */}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-blue-600"><Briefcase size={20} /> Danışman Başvuruları</h3>
+                <div className="space-y-3">
+                  {advisorApplications.map(app => (
+                    <div key={app.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                      <p className="font-bold text-sm mb-1">{app.firstName} {app.lastName}</p>
+                      <p className="text-xs text-gray-500 mb-3">{app.phone}</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleApplicationStatus(app.id, 'approved')} className="flex-1 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold">Kabul</button>
+                        <button onClick={() => handleApplicationStatus(app.id, 'rejected')} className="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-bold">Red</button>
+                      </div>
+                    </div>
+                  ))}
+                  {advisorApplications.length === 0 && <p className="text-xs text-gray-400 italic">Yeni başvuru bulunmuyor.</p>}
+                </div>
+            </div>
           </div>
         )}
       </div>
@@ -377,7 +391,7 @@ export const AdminDashboard = () => {
       <AnimatePresence>
         {generatedPassModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-in zoom-in-95">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
               <div className="w-16 h-16 bg-blue-100 text-dies-blue rounded-full flex items-center justify-center mx-auto mb-6">
                 <Key size={32} />
               </div>

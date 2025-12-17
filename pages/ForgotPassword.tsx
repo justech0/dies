@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, ArrowLeft, Send, CheckCircle, Loader } from 'lucide-react';
@@ -36,7 +35,7 @@ export const ForgotPassword = () => {
           </div>
           <h2 className="text-2xl font-bold text-dies-dark mb-4">Talep Alındı</h2>
           <p className="text-gray-500 mb-8">
-            E-posta adresi sistemde kayıtlıysa sıfırlama talimatları gönderilecektir. Bağlantı ulaşmazsa lütfen spam klasörünü kontrol edin veya yöneticinizle iletişime geçin.
+            Eğer sistemde kayıtlı bir hesabınız varsa, şifre sıfırlama talimatları gönderilecektir. E-posta gelmezse lütfen spam klasörünüzü kontrol edin veya ofisimizle iletişime geçin.
           </p>
           <Link to="/giris" className="inline-flex items-center gap-2 text-dies-blue font-bold hover:text-dies-red">
             <ArrowLeft size={18} /> Giriş Sayfasına Dön
@@ -81,7 +80,7 @@ export const ForgotPassword = () => {
             type="submit" 
             className="w-full bg-dies-blue hover:bg-blue-900 text-white py-4 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2"
           >
-            {isLoading ? <Loader className="animate-spin" /> : <><Send size={18} /> Bağlantı Gönder</>}
+            {isLoading ? <Loader className="animate-spin" /> : <><Send size={18} /> Sıfırlama İsteği Gönder</>}
           </button>
 
           <div className="text-center mt-6">
