@@ -1,17 +1,14 @@
+
 import React from 'react';
 
-// LOGO UPDATE:
-// Bu bileşen artık projenizin 'public' klasöründeki 'logo.png' dosyasını çeker.
-// Logonuzu değiştirmek için proje ana dizinindeki public klasörüne 'logo.png' isminde dosyanızı atmanız yeterlidir.
+// LOGO: Uses /logo.png from the public folder.
 export const DiesLogoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <img 
     src="/logo.png" 
     alt="Dies Gayrimenkul" 
     className={`object-contain ${className}`}
     onError={(e) => {
-      // Eğer logo yüklenemezse (dosya yoksa) geçici bir metin gösterir veya varsayılan bir imaj kullanır
       e.currentTarget.style.display = 'none';
-      // Yedek metin gösterimi parent element tarafından yönetilebilir veya buraya fallback eklenebilir.
     }}
   />
 );

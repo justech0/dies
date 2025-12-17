@@ -1,20 +1,41 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# Dies Gayrimenkul Platformu (V3.3)
 
-This contains everything you need to run your app locally.
+Batman'ın öncü gayrimenkul danışmanlık platformu.
 
-View your app in AI Studio: https://ai.studio/apps/drive/170X4OlkluEhoz_7MbTk6bB3f-WKgKj1_
+## 🚀 Başlangıç
 
-## Run Locally
+### Gereksinimler
+- Node.js (v18+)
+- PHP (v8.1+) (Backend için)
+- MySQL
 
-**Prerequisites:**  Node.js
+### Kurulum
 
+1. **Frontend**:
+   ```bash
+   npm install
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. **Çalıştırma**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Build**:
+   ```bash
+   npm run build
+   ```
+
+## 🛠 Backend Entegrasyonu
+
+Bu proje gerçek bir API üzerinden çalışacak şekilde yapılandırılmıştır. Backend geliştiricisi (Codex) için gerekli tüm teknik detaylar `BACKEND_SPEC_V3_3.md` dosyasında mevcuttur.
+
+**Önemli**: `.env` dosyasında `VITE_API_URL` değişkenini backend adresinize göre ayarlayın.
+Örn: `VITE_API_URL=http://localhost:8000`
+
+## 💎 Özellikler
+- **WebP Sıkıştırma**: Tüm yüklenen görseller frontend tarafında %75 kalite ile WebP formatına dönüştürülür.
+- **Admin Kontrolü**: İlan onay süreci, kullanıcı rol yönetimi ve admin tarafından şifre sıfırlama.
+- **Mobil Uyumlu**: Tamamen responsive tasarım.
+- **Filtreleme**: İl/İlçe/Mahalle bazlı gelişmiş arama.
