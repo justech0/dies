@@ -1,163 +1,260 @@
 
-# DİES GAYRİMENKUL - FULL STACK PHP & MYSQL ENTEGRASYON KILAVUZU (V3 - GÜNCEL)
+# DİES GAYRİMENKUL - BACKEND SPESİFİKASYONU VE ENTEGRASYON KILAVUZU (V3.3)
 
-Bu doküman, React Frontend mimarisinde yapılan son güncellemelerle (Arsa/Ticari kategori mantığı, Profil düzenleme, Toplu işlemler) tam uyumlu veritabanı şemasını ve API uç noktalarını içerir.
-
----
-
-## BÖLÜM 1: MYSQL VERİTABANI ŞEMASI (Schema)
-
-Aşağıdaki SQL tabloları, `types.ts` dosyasındaki veri tiplerini ve yeni eklenen alanları karşılayacak şekilde tasarlanmıştır.
-
-### 1. Kullanıcılar (`users`)
-Sisteme giriş yapan herkes (Admin, Danışman, Normal Üye) bu tabloda tutulur.
-*   `id` (INT, PK, AI)
-*   `name` (VARCHAR)
-*   `email` (VARCHAR, Unique)
-*   `password_hash` (VARCHAR)
-*   `phone` (VARCHAR)
-*   `role` (ENUM: 'admin', 'advisor', 'user')
-*   `image` (VARCHAR) - Profil fotoğrafı URL
-*   `instagram` (VARCHAR) - *Yeni*
-*   `facebook` (VARCHAR) - *Yeni*
-*   `created_at` (DATETIME)
-
-### 2. Danışman Detayları (`advisors`)
-Rolü 'advisor' olan kullanıcıların ekstra bilgilerini tutar. `users` tablosu ile 1-1 ilişkilidir.
-*   `user_id` (INT, FK -> users.id)
-*   `is_founder` (BOOLEAN) - Kurucu ortak mı?
-*   `about` (TEXT) - Biyografi (*Frontend'de güncellenebilir*)
-*   `specializations` (JSON) - Örn: ["Ticari", "Lüks Konut"] (*Frontend'de güncellenebilir*)
-*   `sahibinden_link` (VARCHAR)
-*   `experience_years` (INT)
-*   `total_sales` (INT)
-
-### 3. Ofisler (`offices`)
-*   `id` (INT, PK, AI)
-*   `name` (VARCHAR)
-*   `city` (VARCHAR)
-*   `district` (VARCHAR)
-*   `address` (TEXT)
-*   `phone` (VARCHAR)
-*   `phone2` (VARCHAR) - *Yeni*
-*   `whatsapp` (VARCHAR)
-*   `working_hours` (VARCHAR)
-*   `location_url` (VARCHAR) - Google Maps Linki
-*   `is_headquarters` (BOOLEAN)
-*   `image` (VARCHAR) - Ana resim (*Upload entegrasyonu*)
-*   `gallery` (JSON) - Diğer resimler
-*   `description` (TEXT) - *Yeni*
-
-### 4. Konum Veritabanı (`locations`)
-İl/İlçe/Mahalle hiyerarşisi.
-*   **`cities`**: `id`, `name`
-*   **`districts`**: `id`, `city_id`, `name`
-*   **`neighborhoods`**: `id`, `district_id`, `name`
-
-### 5. Gayrimenkuller (`properties`)
-Frontend `CreateListing.tsx` formundaki dinamik yapıya (Kategori değişimi) uyumlu olmalıdır.
-*   `id` (INT, PK, AI)
-*   `advisor_id` (INT, FK -> users.id)
-*   `title` (VARCHAR)
-*   `description` (TEXT)
-*   `price` (DECIMAL)
-*   `currency` (ENUM: 'TL', 'USD', 'EUR')
-*   **Konum:**
-    *   `province` (VARCHAR)
-    *   `district` (VARCHAR)
-    *   `neighborhood` (VARCHAR)
-    *   `location_display` (VARCHAR) - Örn: "Batman, Gültepe"
-*   **Kategorizasyon:**
-    *   `category` (ENUM: 'Konut', 'Ticari', 'Arsa')
-    *   `type` (ENUM: 'Satılık', 'Kiralık', 'Satıldı', 'Kiralandı', 'pending')
-*   **Detaylar (NULLABLE OLMALI - Arsa/Ticari için boş gelebilir):**
-    *   `bedrooms` (VARCHAR, NULLABLE) - Örn: "3+1" (Sadece Konut/Ticari)
-    *   `bathrooms` (INT, NULLABLE) - (Sadece Konut)
-    *   `area_gross` (INT) - Brüt m² (Hepsi için zorunlu)
-    *   `area_net` (INT) - Net m² (*Yeni Alan*)
-    *   `building_age` (VARCHAR, NULLABLE) - (Sadece Konut/Ticari)
-    *   `heating_type` (VARCHAR, NULLABLE) - (Sadece Konut/Ticari)
-    *   `floor_location` (VARCHAR, NULLABLE)
-    *   `total_floors` (INT, NULLABLE)
-    *   `balcony_count` (INT, NULLABLE)
-    *   `is_furnished` (BOOLEAN, NULLABLE) - Eşyalı mı?
-    *   `is_in_complex` (BOOLEAN, NULLABLE)
-    *   `has_balcony` (BOOLEAN, NULLABLE)
-*   **Medya & Linkler:**
-    *   `image` (VARCHAR) - Kapak resmi
-    *   `images` (JSON) - Tüm resimlerin URL dizisi
-    *   `sahibinden_link` (VARCHAR) - *Yeni*
-*   `features` (JSON) - Seçilen özellikler dizisi Örn: ["Asansör", "İmarlı"]
-*   `created_at` (DATETIME)
-*   `is_featured` (BOOLEAN) - Anasayfa vitrin için
-
-### 6. Başvurular (`applications`)
-*   `id` (INT, PK, AI)
-*   `type` (ENUM: 'advisor', 'office')
-*   `first_name` (VARCHAR)
-*   `last_name` (VARCHAR)
-*   `email` (VARCHAR)
-*   `phone` (VARCHAR)
-*   `city` (VARCHAR)
-*   `status` (ENUM: 'pending', 'approved', 'rejected')
-*   `details` (JSON) - Eğitim durumu, bütçe, meslek, ek notlar vb.
-*   `created_at` (DATETIME)
+Bu doküman, Dies Gayrimenkul projesinin **PHP Backend** mimarisi için nihai teknik gereksinimleri içerir. Bu sürümde (V3.3) Şifre Sıfırlama akışı eklenmiş, mülk durumları 3 ana kolona bölünmüş ve API yanıt formatı tüm sistem için standardize edilmiştir.
 
 ---
 
-## BÖLÜM 2: PHP API ENDPOINT YAPISI
+## 1. GENEL STANDARTLAR
 
-API istekleri `services/api.ts` dosyasına göre yapılandırılmıştır.
+### A. API Yanıt Formatı (Response Envelope)
+Tüm yanıtlar **kesinlikle** bu formatta olmalıdır:
 
-### 1. Auth (`api_auth.php`)
-*   `?action=login` (POST): Email ve şifre alır. Başarılıysa `{ user: {...}, token: "..." }` döner.
-*   `?action=register` (POST): Yeni kullanıcı oluşturur.
-*   `?action=me` (GET): Token ile kullanıcı detayını döner.
-*   **`?action=update_profile` (POST):** *YENİ*
-    *   `Profile.tsx` sayfasından gelen istektir.
-    *   Parametreler: `id`, `name`, `phone`, `instagram`, `facebook`, `about`, `specializations` (array), `image` (url).
-    *   Hem `users` tablosunu hem de varsa `advisors` tablosunu güncellemelidir.
+**Başarılı Yanıt (HTTP 200/201):**
+```json
+{
+  "success": true,
+  "data": { ... } 
+}
+```
 
-### 2. İlanlar (`api_properties.php`)
-*   `?action=list` (GET):
-    *   Parametreler: `status`, `type` (Konut/Arsa/Ticari), `minPrice`, `maxPrice`, `district`, `advisorId`, `is_featured`.
-    *   **Not:** `advisorId` filtresi profil sayfasında danışmanın kendi ilanlarını listelemesi için kritiktir.
-*   `?action=detail&id=ID` (GET): Tekil ilan detayı.
-*   `?action=create` (POST): İlan oluşturur. Gelen veride `category` kontrol edilmeli, kategoriye göre boş gelen alanlar (`bedrooms` vb.) veritabanına `NULL` olarak kaydedilmelidir.
-*   `?action=update` (POST):
-    *   İlan günceller.
-    *   Ayrıca **"Satıldı Olarak İşaretle"** özelliği için sadece `type` alanını güncelleyen istekleri de karşılamalıdır.
-*   `?action=delete` (POST): İlan siler. Frontend'de çoklu silme işlemi döngü içinde bu ucu çağırarak yapılır.
+**Hatalı Yanıt (HTTP 400/401/403/404/422/500):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": 401,
+    "message": "Oturum süresi doldu veya geçersiz.",
+    "details": null
+  }
+}
+```
 
-### 3. Konumlar (`api_locations.php`)
-*   `?type=cities`: Tüm illeri döner.
-*   `?type=districts&city_id=ID`: İle ait ilçeleri döner.
-*   `?type=neighborhoods&district_id=ID`: İlçeye ait mahalleleri döner.
-
-### 4. Dosya Yükleme (`api_upload.php`)
-*   POST Method. `files[]` adında `FormData` alır.
-*   Frontend, resimleri göndermeden önce tarayıcıda WebP formatına çevirip %80 kaliteye sıkıştırmaktadır.
-*   Backend, gelen dosyayı olduğu gibi kaydedip URL'ini dönmelidir.
-*   Dönüş Formatı: `{ "urls": ["http://site.com/uploads/dosya.webp", ...] }`
-
-### 5. Admin Paneli (`api_admin.php`)
-*   `?action=stats` (GET): İstatistikler.
-*   `?action=pending_listings` (GET): Onay bekleyen ilanlar (`status='pending'`).
-*   `?action=approve_listing` (POST): İlanı yayına alır.
-*   `?action=reject_listing` (POST): İlanı reddeder.
-*   `?action=users` (GET): Kullanıcıları listeler.
-*   `?action=change_role` (POST): Kullanıcı rolünü (user/advisor/admin) değiştirir.
-*   `?action=applications` (GET): Başvuruları listeler (`type` parametresine göre).
-*   `?action=manage_application` (POST): Başvuru durumunu günceller (`approved`/`rejected`).
-
-### 6. Ofis Yönetimi (`api_offices.php`)
-*   `?action=list` (GET): Ofisleri listeler.
-*   `?action=create` (POST): Yeni ofis ekler.
-*   `?action=update` (POST): Ofis bilgilerini günceller.
-*   `?action=delete` (POST): Ofisi siler.
+### B. URL Standardı
+Tüm istekler `api_*.php?action=*` yapısını izlemelidir:
+*   `/api/api_auth.php?action=...`
+*   `/api/api_properties.php?action=...`
+*   `/api/api_upload.php` (POST Multipart)
 
 ---
 
-## NOTLAR
-1.  **CORS:** React uygulaması ile API iletişimi için `Access-Control-Allow-Origin: *` ve `Access-Control-Allow-Methods: GET, POST, OPTIONS` başlıkları eklenmelidir.
-2.  **Veri Tutarlılığı:** `api_auth.php?action=me` çağrıldığında, eğer kullanıcı bir danışmansa (role='advisor'), `advisors` tablosundaki `about`, `specializations` gibi alanlar da `user` objesine merge edilerek (birleştirilerek) dönülmelidir.
+## 2. VERİTABANI TASARIMI (MySQL Schema)
+
+**Collation:** `utf8mb4_unicode_ci` | **Engine:** `InnoDB`
+
+### 1. Tablo: `users`
+```sql
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) DEFAULT NULL,
+    role ENUM('admin', 'advisor', 'user') DEFAULT 'user',
+    image VARCHAR(255) DEFAULT NULL,
+    instagram VARCHAR(255) DEFAULT NULL,
+    facebook VARCHAR(255) DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL, -- Soft Delete
+    INDEX idx_role (role),
+    INDEX idx_email (email)
+);
+```
+
+### 2. Tablo: `advisors`
+```sql
+CREATE TABLE advisors (
+    user_id INT PRIMARY KEY,
+    is_founder BOOLEAN DEFAULT FALSE,
+    about TEXT DEFAULT NULL,
+    specializations JSON DEFAULT NULL,
+    sahibinden_link VARCHAR(255) DEFAULT NULL,
+    experience_years INT DEFAULT 0,
+    total_sales INT DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
+
+### 3. Tablo: `properties`
+Mülk durumları netleştirilmiştir.
+```sql
+CREATE TABLE properties (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    advisor_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    price DECIMAL(15, 2) NOT NULL,
+    currency ENUM('TL', 'USD', 'EUR') DEFAULT 'TL',
+    
+    -- Konum (Lookup IDs)
+    province_id INT NOT NULL,
+    district_id INT NOT NULL,
+    neighborhood_id INT NOT NULL,
+    location_display VARCHAR(255) DEFAULT NULL,
+
+    category ENUM('Konut', 'Ticari', 'Arsa') NOT NULL,
+
+    -- DURUM YÖNETİMİ (V3.3)
+    listing_intent ENUM('sale', 'rent') NOT NULL, -- sale: Satılık, rent: Kiralık
+    listing_status ENUM('pending', 'approved', 'rejected', 'archived') DEFAULT 'pending', -- Onay Akışı
+    listing_state ENUM('active', 'sold', 'rented') DEFAULT 'active', -- Nihai Durum (Satıldı/Kiralandı)
+    
+    -- Reddetme Bilgisi
+    rejection_reason TEXT DEFAULT NULL,
+    approved_at DATETIME DEFAULT NULL,
+    approved_by INT DEFAULT NULL,
+
+    -- Detaylar
+    bedrooms VARCHAR(20) DEFAULT NULL,
+    bathrooms INT DEFAULT NULL,
+    area_gross INT NOT NULL,
+    area_net INT DEFAULT NULL,
+    building_age VARCHAR(20) DEFAULT NULL,
+    heating_type VARCHAR(50) DEFAULT NULL,
+    floor_location VARCHAR(20) DEFAULT NULL,
+    total_floors INT DEFAULT NULL,
+    balcony_count INT DEFAULT 0,
+    is_furnished BOOLEAN DEFAULT FALSE,
+    is_in_complex BOOLEAN DEFAULT FALSE,
+    
+    -- Medya
+    image VARCHAR(255) NOT NULL,
+    images JSON NOT NULL,
+    sahibinden_link VARCHAR(255) DEFAULT NULL,
+    features JSON DEFAULT NULL,
+    is_featured BOOLEAN DEFAULT FALSE,
+    
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL,
+
+    FOREIGN KEY (advisor_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_filter (listing_status, listing_state, listing_intent, category),
+    INDEX idx_price (price),
+    INDEX idx_created (created_at)
+);
+```
+
+### 4. Tablo: `password_resets`
+```sql
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_token (token_hash),
+    INDEX idx_expiry (expires_at)
+);
+```
+
+### 5. Tablo: `locations`
+```sql
+CREATE TABLE location_cities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE location_districts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    city_id INT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    FOREIGN KEY (city_id) REFERENCES location_cities(id) ON DELETE CASCADE,
+    INDEX idx_city (city_id)
+);
+
+CREATE TABLE location_neighborhoods (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    district_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    FOREIGN KEY (district_id) REFERENCES location_districts(id) ON DELETE CASCADE,
+    INDEX idx_district (district_id)
+);
+```
+
+### 6. Tablo: `offices` & `applications`
+*V3.1 sürümündeki alanlar korunmalı ancak `id` AUTO_INCREMENT ve PK olmalı.*
+
+---
+
+## 3. API ENDPOINT TABLOSU
+
+### Auth Modülü (`api_auth.php`)
+| Action | Method | Role | Açıklama |
+|---|---|---|---|
+| `login` | POST | Public | Email/Sifre ile giriş |
+| `register` | POST | Public | Yeni kullanıcı kaydı |
+| `me` | GET | Auth | Token ile user+advisor verisi |
+| `update_profile` | POST | Auth | Profil/Biyografi güncelleme |
+| `forgot_password` | POST | Public | Şifre sıfırlama emaili tetikle |
+| `reset_password` | POST | Public | Yeni şifre belirle (Token ile) |
+
+### Properties Modülü (`api_properties.php`)
+| Action | Method | Role | Açıklama |
+|---|---|---|---|
+| `list` | GET | Public | İlanları listele (Pagination: page, limit) |
+| `detail` | GET | Public | Tekil ilan detayı |
+| `create` | POST | Auth | İlan ekle (Default: pending) |
+| `update` | POST | Owner/Admin | İlan güncelle veya state (Satıldı) değiştir |
+| `delete` | POST | Owner/Admin | İlanı sil (Soft delete önerilir) |
+
+**List Parametreleri:** `page`, `limit`, `sort_by` (price, created_at), `sort_dir` (asc, desc), `intent` (sale, rent), `category`, `status`, `state`, `city_id`, `district_id`.
+
+---
+
+## 4. ŞİFRE SIFIRLAMA (Forgot Password) AKIŞI
+
+1.  **Talep (`forgot_password`):**
+    *   Input: `{ "email": "..." }`
+    *   Backend: Kullanıcı varsa 32 karakterlik random bir `token` üretir.
+    *   Token'ı `sha256` ile hash'leyip `password_resets` tablosuna (1 saat expiry ile) kaydeder.
+    *   E-posta gönderir (Dev modunda token'ı response'a basabilir).
+    *   Response: Daima `{ "success": true, "message": "E-posta gönderildi (Varsa)." }` (Güvenlik için).
+
+2.  **Sıfırlama (`reset_password`):**
+    *   Input: `{ "token": "...", "new_password": "..." }`
+    *   Backend: Token hash'ini DB'de arar. Geçerli/Süresi dolmamış/Kullanılmamış ise kullanıcının `password_hash` alanını günceller.
+    *   Token'ı `used_at = NOW()` olarak işaretler.
+
+---
+
+## 5. DOSYA YÜKLEME (Production Kuralları)
+
+*   **Endpoint:** `POST /api_upload.php`
+*   **Güvenlik:**
+    *   Max Size: 5MB
+    *   Max Count: 10 Dosya
+    *   Allowed Mime: `image/jpeg`, `image/png`, `image/webp`
+    *   İsimlendirme: UUID veya Random (Asla orijinal isim değil)
+    *   Dizin: `public/uploads/YYYY/MM/`
+*   **Response:** `{ "success": true, "data": { "urls": ["..."] } }`
+
+---
+
+## 6. FRONTEND ENTEGRASYON NOTLARI (Label Mapping)
+
+| DB Value (Enum) | Frontend Label (Turkish) |
+|---|---|
+| `listing_status: pending` | Onay Bekliyor |
+| `listing_status: approved` | Yayında |
+| `listing_status: rejected` | Reddedildi |
+| `listing_intent: sale` | Satılık |
+| `listing_intent: rent` | Kiralık |
+| `listing_state: active` | Aktif |
+| `listing_state: sold` | Satıldı |
+| `listing_state: rented` | Kiralandı |
+
+---
+
+## 7. DONE CHECKLIST
+
+*   [ ] Tüm endpointler `success/data/error` zarfını kullanıyor mu?
+*   [ ] Password Reset tokenları hashlenerek saklanıyor mu?
+*   [ ] Dosya yüklemede PHP scripti yükleme koruması var mı?
+*   [ ] Properties tablosu 3-kolon yapısına (status/intent/state) uygun mu?
+*   [ ] Locations tablolarında FK ve Indexler tanımlı mı?
+*   [ ] Soft delete (deleted_at) aktif mi?
