@@ -73,13 +73,17 @@ const Navbar = () => {
       <nav className={`fixed w-full z-50 transition-all duration-500 ${navbarClasses}`}>
         <div className="max-w-[1800px] mx-auto px-4 md:px-8 flex items-center justify-between h-full">
           
-          {/* Sol Grup: Logo + Menü */}
-          <div className="flex items-center gap-8 xl:gap-12">
+          {/* Sol: Logo */}
+          <div className="flex-shrink-0">
             <Link to="/" className="transition-all duration-300 block">
                <BrandLogo isTransparent={isTransparent} />
             </Link>
+          </div>
 
-            <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+          {/* Sağ: Menü + Aksiyonlar */}
+          <div className="hidden lg:flex items-center gap-8 xl:gap-12">
+            {/* Menü Linkleri */}
+            <div className="flex items-center gap-6 xl:gap-8">
               {navLinks.map((link) => (
                 <Link 
                   key={link.name} 
@@ -90,44 +94,44 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
-          </div>
 
-          {/* Sağ Grup: Aksiyonlar */}
-          <div className="hidden lg:flex items-center gap-4">
-            {user ? (
-              <>
-                 {user.role === 'admin' && (
-                   <Link to="/admin" className={`${textClasses} font-bold text-xs flex items-center gap-1.5 px-2`}>
-                     <LayoutDashboard size={16} /> Panel
+            {/* Aksiyon Butonları */}
+            <div className="flex items-center gap-4 pl-8 border-l border-gray-100/20">
+              {user ? (
+                <>
+                   {user.role === 'admin' && (
+                     <Link to="/admin" className={`${textClasses} font-bold text-xs flex items-center gap-1.5 px-2`}>
+                       <LayoutDashboard size={16} /> Panel
+                     </Link>
+                   )}
+                   <Link to="/profil" className={`text-xs font-extrabold ${textClasses} px-2`}>
+                     {user.name}
                    </Link>
-                 )}
-                 <Link to="/profil" className={`text-xs font-extrabold ${textClasses} px-2`}>
-                   {user.name}
-                 </Link>
-                 <button onClick={handleLogout} className={`p-2 ${isHome && !isScrolled ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-dies-red'}`} title="Çıkış Yap">
-                   <LogOut size={18} />
-                 </button>
-                 <Link 
-                    to="/ilan-ver"
-                    className="flex items-center gap-2 bg-dies-red text-white px-6 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 active:scale-95 text-xs shadow-lg shadow-dies-red/20 ml-2"
+                   <button onClick={handleLogout} className={`p-2 ${isHome && !isScrolled ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-dies-red'}`} title="Çıkış Yap">
+                     <LogOut size={18} />
+                   </button>
+                   <Link 
+                      to="/ilan-ver"
+                      className="flex items-center gap-2 bg-dies-red text-white px-6 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 active:scale-95 text-xs shadow-lg shadow-dies-red/20 ml-2"
+                  >
+                      <PlusCircle size={16} />
+                      İlan Ekle
+                  </Link>
+                </>
+              ) : (
+                <Link 
+                  to="/giris"
+                  className={`flex items-center gap-2 px-8 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 text-xs shadow-md ${
+                    isHome && !isScrolled 
+                    ? 'bg-white text-dies-blue hover:bg-gray-100' 
+                    : 'bg-dies-blue text-white hover:bg-blue-900'
+                  }`}
                 >
-                    <PlusCircle size={16} />
-                    İlan Ekle
+                  <UserIcon size={14} />
+                  Giriş Yap
                 </Link>
-              </>
-            ) : (
-              <Link 
-                to="/giris"
-                className={`flex items-center gap-2 px-8 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 text-xs shadow-md ${
-                  isHome && !isScrolled 
-                  ? 'bg-white text-dies-blue hover:bg-gray-100' 
-                  : 'bg-dies-blue text-white hover:bg-blue-900'
-                }`}
-              >
-                <UserIcon size={14} />
-                Giriş Yap
-              </Link>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Mobil Menü Butonu */}
