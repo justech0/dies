@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 
 // LOGO: Uses /logo.png from the public folder with text fallback
@@ -22,6 +23,13 @@ export const DiesLogoIcon: React.FC<{ className?: string }> = ({ className }) =>
     />
   );
 };
+
+// Sahibinden "S" Logosu
+export const SahibindenIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={`flex items-center justify-center font-black select-none ${className}`} style={{ fontFamily: 'sans-serif' }}>
+    S
+  </div>
+);
 
 export const LoadingSpinner = () => (
   <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

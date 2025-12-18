@@ -1,3 +1,4 @@
+
 import { Property, User, Advisor, Office, AdvisorApplication, OfficeApplication } from '../types';
 
 // Fix: Property 'env' does not exist on type 'ImportMeta'. Using any cast to bypass TypeScript error for Vite environment variables.
@@ -17,24 +18,36 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     delete headers['Content-Type'];
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  if (response.status === 204) return {} as T;
+    if (response.status === 204) return {} as T;
 
-  const result = await response.json().catch(() => ({ 
-    success: false, 
-    error: { message: 'Sunucu yanıtı okunamadı.' } 
-  }));
-
-  if (!response.ok || result.success === false) {
-    const errorMessage = result.error?.message || result.message || `İşlem başarısız (Hata: ${response.status})`;
-    throw new Error(errorMessage);
+    // Check if the content-type is JSON before parsing
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      const result = await response.json();
+      
+      if (!response.ok || result.success === false) {
+        const errorMessage = result.error?.message || result.message || `İşlem başarısız (Hata: ${response.status})`;
+        throw new Error(errorMessage);
+      }
+      
+      return result.data !== undefined ? result.data : result;
+    } else {
+      // Not JSON (could be a 404 HTML page from dev server)
+      if (!response.ok) {
+        throw new Error(`API Hatası: ${response.status}. Lütfen VITE_API_URL değişkenini kontrol edin.`);
+      }
+      return {} as T;
+    }
+  } catch (error) {
+    console.error("API Request Error:", error);
+    throw error;
   }
-
-  return result.data !== undefined ? result.data : result;
 }
 
 export const api = {
