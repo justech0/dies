@@ -11,12 +11,14 @@ const MotionDiv = motion.div as any;
 
 interface BrandLogoProps {
   isTransparent: boolean;
+  isHidden?: boolean;
 }
 
-const BrandLogo: React.FC<BrandLogoProps> = ({ isTransparent }) => (
+const BrandLogo: React.FC<BrandLogoProps> = ({ isTransparent, isHidden }) => (
   <div className={`
-    flex items-center justify-center transition-all duration-300 hover:scale-105 
+    flex items-center justify-center transition-all duration-200 hover:scale-105 
     px-2 py-1 md:px-3 md:py-1.5 rounded-lg border 
+    ${isHidden ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100'}
     ${isTransparent 
       ? 'border-white/10 bg-white/5 backdrop-blur-sm shadow-sm' 
       : 'border-gray-100 bg-white shadow-soft'}
@@ -70,19 +72,16 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`fixed w-full z-50 transition-all duration-500 ${navbarClasses}`}>
-        <div className="max-w-[1800px] mx-auto px-4 md:px-8 flex items-center justify-between h-full">
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${navbarClasses}`}>
+        <div className="max-w-[1800px] mx-auto pl-2 md:pl-4 pr-4 md:pr-8 flex items-center justify-between h-full">
           
-          {/* Sol: Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="transition-all duration-300 block">
-               <BrandLogo isTransparent={isTransparent} />
+            <Link to="/" className="transition-all duration-200 block">
+               <BrandLogo isTransparent={isTransparent} isHidden={isMobileMenuOpen} />
             </Link>
           </div>
 
-          {/* Sağ: Menü + Aksiyonlar */}
           <div className="hidden lg:flex items-center gap-8 xl:gap-12">
-            {/* Menü Linkleri */}
             <div className="flex items-center gap-6 xl:gap-8">
               {navLinks.map((link) => (
                 <Link 
@@ -95,7 +94,6 @@ const Navbar = () => {
               ))}
             </div>
 
-            {/* Aksiyon Butonları */}
             <div className="flex items-center gap-4 pl-8 border-l border-gray-100/20">
               {user ? (
                 <>
@@ -134,13 +132,12 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Mobil Menü Butonu */}
           <div className="lg:hidden">
             <button 
               onClick={() => setIsMobileMenuOpen(true)} 
-              className={`p-2 transition-colors ${isHome && !isScrolled ? 'text-white' : 'text-dies-blue'}`}
+              className={`p-2 transition-transform active:scale-90 ${isHome && !isScrolled ? 'text-white' : 'text-dies-blue'}`}
             >
-              <Menu size={30} />
+              <Menu size={32} />
             </button>
           </div>
         </div>
@@ -152,95 +149,122 @@ const Navbar = () => {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'tween', duration: 0.3 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-[60] flex flex-col bg-white"
           >
-            <div className="p-6 flex justify-between items-center border-b border-gray-100">
-              <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
-                <DiesLogoIcon className="h-8 w-auto" />
+            {/* MOBİL BAŞLIK: LOGO - GİRİŞ YAP / ÜYE OL - KAPAT */}
+            <div className="p-4 flex items-center justify-between border-b border-gray-100 bg-white shadow-sm">
+              {/* Sol: Mini Logo */}
+              <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="shrink-0">
+                <DiesLogoIcon className="h-6 w-auto" />
               </Link>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-dies-blue hover:text-dies-red">
-                <X size={32} />
+
+              {/* Orta: Giriş Yap / Üye Ol (Zarif Buton) */}
+              <div className="flex-1 flex justify-center px-4">
+                {user ? (
+                    <Link 
+                        to="/profil" 
+                        onClick={() => setIsMobileMenuOpen(false)} 
+                        className="text-[9px] font-black text-dies-blue uppercase border border-dies-blue/30 bg-blue-50/50 px-4 py-1.5 rounded-full truncate max-w-[140px] shadow-sm flex items-center gap-2"
+                    >
+                        <UserIcon size={12} /> {user.name}
+                    </Link>
+                ) : (
+                    <Link 
+                        to="/giris" 
+                        onClick={() => setIsMobileMenuOpen(false)} 
+                        className="text-[9px] font-black text-white uppercase bg-dies-blue px-5 py-2 rounded-full shadow-md shadow-blue-900/10 active:scale-95 transition-transform whitespace-nowrap"
+                    >
+                        GİRİŞ YAP / ÜYE OL
+                    </Link>
+                )}
+              </div>
+
+              {/* Sağ: Kapat */}
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)} 
+                className="p-2 text-dies-blue hover:text-dies-red transition-colors shrink-0"
+              >
+                <X size={28} />
               </button>
             </div>
             
-            <div className="flex flex-col p-8 space-y-6 overflow-y-auto h-full">
+            <div className="flex flex-col p-6 md:p-10 space-y-6 overflow-y-auto h-full">
               {user && (
-                <div className="mb-4 pb-4 border-b border-gray-100">
-                  <p className="text-lg font-bold text-dies-dark">Merhaba, {user.name}</p>
-                  <Link to="/profil" onClick={() => setIsMobileMenuOpen(false)} className="text-sm text-dies-blue mt-1 block font-bold">Profilim</Link>
+                <div className="mb-4 pb-4 border-b border-gray-100 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-dies-blue border border-blue-100">
+                    <UserIcon size={24} />
+                  </div>
+                  <div>
+                    <p className="text-lg font-black text-dies-dark tracking-tight">Hoşgeldiniz</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{user.name}</p>
+                  </div>
                 </div>
               )}
             
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  to={link.path} 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-2xl font-black text-dies-blue hover:text-dies-red transition-colors"
-                >
-                  {link.name}
-                </Link>
-              ))}
+              <div className="space-y-4">
+                {navLinks.map((link) => (
+                  <Link 
+                    key={link.name} 
+                    to={link.path} 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block text-3xl font-black text-dies-blue hover:text-dies-red transition-colors tracking-tighter"
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
               
               <hr className="border-gray-100 my-4" />
               
-              {user ? (
-                <>
-                  <Link 
-                    to="/ilan-ver" 
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-xl font-bold text-dies-red flex items-center gap-2"
-                  >
-                    <PlusCircle /> İlan Ver
-                  </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="text-xl font-medium text-left text-gray-500 hover:text-red-500"
-                  >
-                    Çıkış Yap
-                  </button>
-                </>
-              ) : (
-                <Link 
-                  to="/giris"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-xl font-bold text-dies-blue"
-                >
-                  Giriş Yap / Üye Ol
-                </Link>
-              )}
+              <div className="space-y-6">
+                {/* İlan Yayınla - Sadece Giriş Yapılmışsa Aktif */}
+                {user && (
+                  <>
+                    <Link 
+                        to="/ilan-ver" 
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="text-xl font-bold text-dies-red flex items-center gap-3 bg-red-50 p-5 rounded-3xl border border-red-100 shadow-sm"
+                    >
+                        <PlusCircle size={22} /> İlan Yayınla
+                    </Link>
+                    
+                    <button 
+                        onClick={handleLogout}
+                        className="text-lg font-bold text-left text-gray-400 hover:text-red-500 flex items-center gap-3 px-5"
+                    >
+                        <LogOut size={20} /> Çıkış Yap
+                    </button>
+                  </>
+                )}
+              </div>
 
-              {/* MOBİL İLETİŞİM ALANI */}
-              <div className="mt-auto pt-10 pb-6 border-t border-gray-100">
-                 <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Bize Ulaşın</p>
-                        <div className="space-y-4">
-                            <a href="tel:+905438682668" className="flex items-center gap-3 text-dies-blue font-bold">
-                                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-dies-blue">
-                                    <Phone size={18} />
-                                </div>
-                                +90 543 868 26 68
-                            </a>
-                            <a href="tel:+905059969612" className="flex items-center gap-3 text-dies-blue font-bold">
-                                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-dies-blue">
-                                    <Phone size={18} />
-                                </div>
-                                +90 505 996 96 12
-                            </a>
-                        </div>
+              <div className="mt-auto pt-10 pb-6">
+                 <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">İLETİŞİM HATLARIMIZ</p>
+                    <div className="flex flex-col gap-4 mb-8">
+                        <a href="tel:+905438682668" className="flex items-center gap-4 text-dies-blue font-black text-lg group">
+                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-dies-blue shadow-sm border border-gray-100 group-active:scale-90 transition-transform">
+                                <Phone size={18} />
+                            </div>
+                            +90 543 868 26 68
+                        </a>
+                        <a href="tel:+905059969612" className="flex items-center gap-4 text-dies-blue font-black text-lg group">
+                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-dies-blue shadow-sm border border-gray-100 group-active:scale-90 transition-transform">
+                                <Phone size={18} />
+                            </div>
+                            +90 505 996 96 12
+                        </a>
                     </div>
-
-                    <div className="flex flex-col gap-3">
-                        <a href="https://www.instagram.com/diesgayrimenkul/" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-dies-blue hover:bg-dies-red hover:text-white transition-all shadow-sm">
-                            <Instagram size={18} />
+                    <div className="flex justify-center gap-6 pt-4 border-t border-gray-100">
+                        <a href="https://www.instagram.com/diesgayrimenkul/" target="_blank" rel="noreferrer" className="w-12 h-12 rounded-full flex items-center justify-center bg-white text-dies-blue hover:bg-dies-red hover:text-white transition-all shadow-sm border border-gray-100">
+                            <Instagram size={24} />
                         </a>
-                        <a href="https://www.facebook.com/diesgayrimenkul/" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-dies-blue hover:bg-dies-red hover:text-white transition-all shadow-sm">
-                            <Facebook size={18} />
+                        <a href="https://www.facebook.com/diesgayrimenkul/" target="_blank" rel="noreferrer" className="w-12 h-12 rounded-full flex items-center justify-center bg-white text-dies-blue hover:bg-dies-red hover:text-white transition-all shadow-sm border border-gray-100">
+                            <Facebook size={24} />
                         </a>
-                        <a href="https://diesgayrimenkul.sahibinden.com/" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-dies-blue hover:bg-yellow-500 hover:text-white transition-all shadow-sm">
-                            <SahibindenIcon className="text-lg" />
+                        <a href="https://diesgayrimenkul.sahibinden.com/" target="_blank" rel="noreferrer" className="w-12 h-12 rounded-full flex items-center justify-center bg-white text-dies-blue hover:bg-yellow-500 hover:text-white transition-all shadow-sm border border-gray-100">
+                            <SahibindenIcon className="text-xl" />
                         </a>
                     </div>
                  </div>

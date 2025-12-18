@@ -1,30 +1,35 @@
 
 import React, { useState } from 'react';
 
-// LOGO: Uses /logo.png from the public folder with text fallback
+// LOGO: Optimized for zero-latency rendering
 export const DiesLogoIcon: React.FC<{ className?: string }> = ({ className }) => {
   const [error, setError] = useState(false);
 
-  if (error) {
-    return (
-      <div className={`flex flex-col items-start leading-none ${className}`}>
-        <span className="text-dies-blue font-black tracking-tighter text-xl md:text-2xl">DİES</span>
-        <span className="text-dies-red font-bold text-[8px] md:text-[10px] tracking-widest mt-[-2px]">GAYRİMENKUL</span>
-      </div>
-    );
-  }
+  // Fallback high-performance vector-style logo for instant display
+  const FallbackLogo = () => (
+    <div className={`flex flex-col items-start leading-none select-none ${className}`}>
+      <span className="text-dies-blue font-black tracking-tighter text-xl md:text-2xl">DİES</span>
+      <span className="text-dies-red font-bold text-[8px] md:text-[10px] tracking-widest mt-[-2px]">GAYRİMENKUL</span>
+    </div>
+  );
+
+  if (error) return <FallbackLogo />;
 
   return (
-    <img 
-      src="/logo.png" 
-      alt="Dies Gayrimenkul" 
-      className={`object-contain ${className}`}
-      onError={() => setError(true)}
-    />
+    <div className={`relative flex items-center justify-center ${className}`}>
+      {/* Background skeleton or placeholder while image loads to prevent layout shift */}
+      <img 
+        src="/logo.png" 
+        alt="Dies Gayrimenkul" 
+        className="w-full h-full object-contain"
+        loading="eager"
+        fetchPriority="high"
+        onError={() => setError(true)}
+      />
+    </div>
   );
 };
 
-// Sahibinden "S" Logosu
 export const SahibindenIcon: React.FC<{ className?: string }> = ({ className }) => (
   <div className={`flex items-center justify-center font-black select-none ${className}`} style={{ fontFamily: 'sans-serif' }}>
     S

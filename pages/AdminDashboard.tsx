@@ -1,14 +1,18 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../components/AuthContext';
 // @ts-ignore
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, CheckCircle, XCircle, BarChart, Trash2, Clock, Users, Edit, Plus, Image as ImageIcon, Layout, Save, Settings, ShieldAlert, Building, FileText, Eye, MapPin, MessageCircle, Filter, Search, LogOut, Briefcase, UploadCloud, X, List, Phone, RefreshCw, Key, Copy } from 'lucide-react';
+// Add User as UserIcon to imports from lucide-react
+import { Home, CheckCircle, XCircle, BarChart, Trash2, Clock, Users, User as UserIcon, Edit, Plus, Image as ImageIcon, Layout, Save, Settings, ShieldAlert, Building, FileText, Eye, MapPin, MessageCircle, Filter, Search, LogOut, Briefcase, UploadCloud, X, List, Phone, RefreshCw, Key, Copy, MoreVertical } from 'lucide-react';
 // @ts-ignore
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Property, Advisor, Office, OfficeApplication, AdvisorApplication, User } from '../types';
 import { api } from '../services/api';
 import { compressToWebp } from '../utils/image';
+
+const MotionDiv = motion.div as any;
 
 export const AdminDashboard = () => {
   const { theme } = useTheme();
@@ -86,18 +90,6 @@ export const AdminDashboard = () => {
     }
   };
 
-  const openOfficeModal = (office?: Office) => {
-    if (office) {
-      setCurrentOffice(office);
-      setPreviewImage(office.image);
-    } else {
-      setCurrentOffice({});
-      setPreviewImage('');
-    }
-    setOfficeImageFile(null);
-    setIsEditingOffice(true);
-  };
-
   if (!user || user.role !== 'admin') {
     return (
       <div className="pt-40 text-center px-4">
@@ -156,32 +148,6 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleSaveOffice = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingOffice(true);
-    try {
-      let imageUrl = currentOffice.image || '';
-      if (officeImageFile) {
-        const formData = new FormData();
-        formData.append('files[]', officeImageFile);
-        const res = await api.upload(formData);
-        imageUrl = res.urls[0];
-      }
-      const officeData = { ...currentOffice, image: imageUrl };
-      if (officeData.id) {
-        await api.offices.update(officeData.id, officeData);
-      } else {
-        await api.offices.create(officeData);
-      }
-      await loadAdminData();
-      setIsEditingOffice(false);
-    } catch (error) {
-      alert("Ofis kaydedilirken hata oluştu.");
-    } finally {
-      setIsSavingOffice(false);
-    }
-  };
-
   const handleRoleChange = async (userId: number, newRole: string) => {
     if (window.confirm("Kullanıcının rolünü değiştirmek istediğinize emin misiniz?")) {
       try {
@@ -218,195 +184,233 @@ export const AdminDashboard = () => {
     alert("Şifre kopyalandı.");
   };
 
-  const inputClass = `w-full p-2.5 rounded-lg border text-sm bg-gray-50 border-gray-200 text-gray-900`;
+  const inputClass = `w-full p-3 rounded-xl border text-sm bg-gray-50 border-gray-200 text-gray-900 focus:ring-2 focus:ring-dies-blue outline-none transition-all`;
   const displayUsers = userFilterType === 'all' ? users : users.filter(u => u.role === 'advisor');
 
   return (
-    <div className="container mx-auto px-4 py-12 pt-32 min-h-screen relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-            <h1 className="text-3xl font-bold text-gray-900">Yönetim Paneli</h1>
+    <div className="container mx-auto px-4 py-8 md:py-12 pt-28 md:pt-32 min-h-screen relative bg-gray-50/30">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
+        <div className="w-full">
+            <h1 className="text-3xl font-black text-gray-900 tracking-tighter">Yönetim Paneli</h1>
             <p className="text-gray-500 text-sm mt-1">Hoşgeldin, <span className="font-bold text-dies-blue">{user.name}</span></p>
         </div>
-        <button onClick={() => { logout(); navigate('/'); }} className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-red-100"><LogOut size={16} /> Çıkış Yap</button>
+        <button onClick={() => { logout(); navigate('/'); }} className="w-full md:w-auto bg-red-50 text-red-600 px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-colors border border-red-100"><LogOut size={16} /> Çıkış Yap</button>
       </div>
 
-      <div className="flex overflow-x-auto gap-2 mb-8 border-b border-gray-200 pb-1 scrollbar-hide">
-        <button onClick={() => setActiveTab('overview')} className={`px-6 py-3 font-bold rounded-t-lg whitespace-nowrap ${activeTab === 'overview' ? 'bg-dies-blue text-white' : 'text-gray-500 hover:bg-gray-50'}`}>Genel Bakış</button>
-        <button onClick={() => setActiveTab('approvals')} className={`px-6 py-3 font-bold rounded-t-lg whitespace-nowrap ${activeTab === 'approvals' ? 'bg-dies-blue text-white' : 'text-gray-500 hover:bg-gray-50'}`}>Başvurular & Onaylar</button>
-        <button onClick={() => setActiveTab('users')} className={`px-6 py-3 font-bold rounded-t-lg whitespace-nowrap ${activeTab === 'users' ? 'bg-dies-blue text-white' : 'text-gray-500 hover:bg-gray-50'}`}>Kullanıcılar</button>
-        <button onClick={() => setActiveTab('offices')} className={`px-6 py-3 font-bold rounded-t-lg whitespace-nowrap ${activeTab === 'offices' ? 'bg-dies-blue text-white' : 'text-gray-500 hover:bg-gray-50'}`}>Ofisler</button>
-        <button onClick={() => setActiveTab('all-listings')} className={`px-6 py-3 font-bold rounded-t-lg whitespace-nowrap ${activeTab === 'all-listings' ? 'bg-dies-blue text-white' : 'text-gray-500 hover:bg-gray-50'}`}>Tüm İlanlar</button>
+      {/* Tab Menu - Scrollable on Mobile */}
+      <div className="flex overflow-x-auto gap-1 mb-8 bg-white p-1 rounded-2xl shadow-soft border border-gray-100 scrollbar-hide">
+        {[
+          { id: 'overview', label: 'Genel Bakış', icon: BarChart },
+          { id: 'approvals', label: 'Onaylar', icon: Clock },
+          { id: 'users', label: 'Kullanıcılar', icon: Users },
+          { id: 'all-listings', label: 'İlanlar', icon: List },
+          { id: 'offices', label: 'Ofisler', icon: Building },
+        ].map(tab => (
+          <button 
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)} 
+            className={`flex items-center gap-2 px-6 py-3 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-dies-blue text-white shadow-lg' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div className="bg-white rounded-2xl shadow-soft border border-gray-100 p-6 min-h-[500px]">
+      <div className="min-h-[500px]">
         
         {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="p-6 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="text-3xl font-extrabold text-dies-blue">{users.length}</p>
-                    <span className="font-bold text-gray-700">Üye</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-soft">
+                    <p className="text-3xl font-black text-dies-blue mb-1">{users.length}</p>
+                    <span className="font-bold text-xs text-gray-400 uppercase tracking-widest">Üye Sayısı</span>
                 </div>
-                <div className="p-6 bg-green-50 rounded-xl border border-green-100">
-                    <p className="text-3xl font-extrabold text-green-600">{allListings.filter(p => p.type !== 'pending').length}</p>
-                    <span className="font-bold text-gray-700">Aktif İlan</span>
+                <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-soft">
+                    <p className="text-3xl font-black text-green-600 mb-1">{allListings.filter(p => p.type !== 'pending').length}</p>
+                    <span className="font-bold text-xs text-gray-400 uppercase tracking-widest">Aktif İlan</span>
                 </div>
-                <div className="p-6 bg-yellow-50 rounded-xl border border-yellow-100">
-                    <p className="text-3xl font-extrabold text-yellow-600">{pendingListings.length}</p>
-                    <span className="font-bold text-gray-700">Bekleyen Onay</span>
+                <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-soft">
+                    <p className="text-3xl font-black text-yellow-600 mb-1">{pendingListings.length}</p>
+                    <span className="font-bold text-xs text-gray-400 uppercase tracking-widest">Bekleyen</span>
                 </div>
-                 <div className="p-6 bg-purple-50 rounded-xl border border-purple-100">
-                    <p className="text-3xl font-extrabold text-purple-600">{advisorApplications.length + officeApplications.length}</p>
-                    <span className="font-bold text-gray-700">Başvurular</span>
+                <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-soft">
+                    <p className="text-3xl font-black text-purple-600 mb-1">{advisorApplications.length + officeApplications.length}</p>
+                    <span className="font-bold text-xs text-gray-400 uppercase tracking-widest">Başvuru</span>
                 </div>
             </div>
         )}
 
         {activeTab === 'users' && (
-            <div>
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold flex items-center gap-2"><Users /> Kullanıcı Yönetimi</h3>
-                    <div className="flex bg-gray-100 p-1 rounded-lg">
-                        <button onClick={() => setUserFilterType('all')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${userFilterType === 'all' ? 'bg-white shadow text-dies-dark' : 'text-gray-500'}`}>Tümü</button>
-                        <button onClick={() => setUserFilterType('advisor')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${userFilterType === 'advisor' ? 'bg-white shadow text-dies-blue' : 'text-gray-500'}`}>Danışmanlar</button>
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-soft">
+                    <h3 className="text-lg font-black text-dies-dark flex items-center gap-2"><Users size={20} /> Kullanıcılar</h3>
+                    <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
+                        <button onClick={() => setUserFilterType('all')} className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-xs font-bold transition-all ${userFilterType === 'all' ? 'bg-white shadow text-dies-dark' : 'text-gray-500'}`}>Tümü</button>
+                        <button onClick={() => setUserFilterType('advisor')} className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-xs font-bold transition-all ${userFilterType === 'advisor' ? 'bg-white shadow text-dies-blue' : 'text-gray-500'}`}>Danışmanlar</button>
                     </div>
                 </div>
                 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[800px]">
-                        <thead>
-                            <tr className="border-b text-gray-400 text-xs uppercase tracking-wider font-bold">
-                                <th className="pb-3 pl-2">ID</th>
-                                <th className="pb-3">Ad Soyad</th>
-                                <th className="pb-3">E-posta</th>
-                                <th className="pb-3">Rol</th>
-                                <th className="pb-3 text-right pr-4">İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {displayUsers.map(u => (
-                                <tr key={u.id} className="hover:bg-gray-50">
-                                    <td className="py-3 pl-2 text-gray-500 text-sm">#{u.id}</td>
-                                    <td className="py-3 font-bold text-dies-dark flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                                            {u.image ? <img src={u.image} className="w-full h-full object-cover" /> : <Users size={16} className="text-gray-500" />}
-                                        </div>
-                                        {u.name}
-                                    </td>
-                                    <td className="py-3 text-gray-600 text-sm">{u.email}</td>
-                                    <td className="py-3">
-                                        <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)} className="p-1 border rounded text-xs font-bold" disabled={u.id === user.id}>
-                                            <option value="user">User</option>
-                                            <option value="advisor">Advisor</option>
-                                            <option value="admin">Admin</option>
-                                        </select>
-                                    </td>
-                                    <td className="py-3 text-right pr-4">
-                                        <div className="flex justify-end gap-2">
-                                          <button onClick={() => handleAdminResetPassword(u.id, u.name)} className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dies-blue hover:text-white transition-all" title="Şifre Sıfırla">
-                                              <Key size={16} />
-                                          </button>
-                                          <button onClick={() => setSelectedAdvisorForListings(u)} className="p-2 bg-blue-50 text-dies-blue rounded-lg hover:bg-dies-blue hover:text-white transition-all" title="İlanları Gör">
-                                              <List size={16} />
-                                          </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                {/* Mobile Friendly User Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {displayUsers.map(u => (
+                        <div key={u.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-soft flex flex-col justify-between hover:shadow-md transition-all">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                                    {u.image ? <img src={u.image} className="w-full h-full object-cover" /> : <UserIcon size={24} className="text-dies-blue" />}
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-black text-dies-dark truncate">{u.name}</h4>
+                                    <p className="text-xs text-gray-400 font-medium truncate">{u.email}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                                <select 
+                                  value={u.role} 
+                                  onChange={(e) => handleRoleChange(u.id, e.target.value)} 
+                                  className="bg-gray-50 px-3 py-1.5 rounded-lg text-xs font-bold border-none outline-none focus:ring-2 focus:ring-dies-blue"
+                                  disabled={u.id === user.id}
+                                >
+                                    <option value="user">Üye</option>
+                                    <option value="advisor">Danışman</option>
+                                    <option value="admin">Yönetici</option>
+                                </select>
+                                <div className="flex gap-2">
+                                  <button onClick={() => handleAdminResetPassword(u.id, u.name)} className="p-2.5 bg-gray-50 text-gray-500 rounded-xl hover:bg-dies-blue hover:text-white transition-all" title="Şifre Sıfırla">
+                                      <Key size={16} />
+                                  </button>
+                                  <button onClick={() => setSelectedAdvisorForListings(u)} className="p-2.5 bg-blue-50 text-dies-blue rounded-xl hover:bg-dies-blue hover:text-white transition-all" title="İlanları Gör">
+                                      <List size={16} />
+                                  </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         )}
 
         {activeTab === 'all-listings' && (
-            <div>
-                 <div className="mb-4 flex gap-2">
-                     <input placeholder="Ara (Başlık veya ID)..." className={inputClass} value={listingFilters.term} onChange={e => setListingFilters({...listingFilters, term: e.target.value})} />
-                     <button onClick={handleListingFilter} className="bg-dies-blue text-white px-6 py-2 rounded-lg font-bold">Ara</button>
+            <div className="space-y-4">
+                 <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-soft">
+                     <div className="relative flex-1">
+                        <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+                        <input placeholder="İlan başlığı veya ID ile ara..." className={`${inputClass} pl-10`} value={listingFilters.term} onChange={e => setListingFilters({...listingFilters, term: e.target.value})} />
+                     </div>
+                     <button onClick={handleListingFilter} className="bg-dies-blue text-white px-8 py-3 rounded-xl font-black uppercase tracking-wider text-sm shadow-lg shadow-blue-900/20">İlanları Filtrele</button>
                  </div>
-                 <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[700px]">
-                        <thead><tr className="border-b text-xs font-bold uppercase text-gray-400"><th className="pb-2">Başlık</th><th className="pb-2">Fiyat</th><th className="pb-2">Durum</th><th className="pb-2 text-right">İşlem</th></tr></thead>
-                        <tbody>
-                            {filteredListings.map(p => (
-                                <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50">
-                                    <td className="py-3 font-medium text-sm">{p.title}</td>
-                                    <td className="py-3 font-bold text-dies-blue">{p.price.toLocaleString()} TL</td>
-                                    <td className="py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${p.type === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{p.type}</span></td>
-                                    <td className="py-3 text-right whitespace-nowrap pr-2">
-                                        <button onClick={() => navigate(`/ilan/${p.id}`)} className="text-blue-600 mr-3 hover:text-blue-800"><Eye size={18} /></button>
-                                        <button onClick={() => handleEditListing(p)} className="text-orange-500 mr-3 hover:text-orange-700"><Edit size={18} /></button>
-                                        <button onClick={() => handleDeleteListing(p.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredListings.map(p => (
+                        <div key={p.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-soft flex flex-col justify-between group">
+                            <div className="flex justify-between items-start mb-3">
+                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${p.type === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                                    {p.type === 'pending' ? 'Onay Bekliyor' : p.type}
+                                </span>
+                                <span className="text-xs font-bold text-dies-blue">#{p.id}</span>
+                            </div>
+                            <h4 className="font-bold text-dies-dark mb-4 line-clamp-2 group-hover:text-dies-blue transition-colors">{p.title}</h4>
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                                <p className="font-black text-dies-blue">{p.price.toLocaleString()} TL</p>
+                                <div className="flex gap-1">
+                                    <button onClick={() => navigate(`/ilan/${p.id}`)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Eye size={18} /></button>
+                                    <button onClick={() => handleEditListing(p)} className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"><Edit size={18} /></button>
+                                    <button onClick={() => handleDeleteListing(p.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={18} /></button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                  </div>
             </div>
         )}
 
         {activeTab === 'approvals' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-yellow-600"><Clock size={20} /> İlan Onayları</h3>
-                <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-soft">
+                <h3 className="font-black text-xl mb-6 flex items-center gap-2 text-dies-dark"><Clock size={24} className="text-yellow-500" /> İlan Onayları</h3>
+                <div className="space-y-4">
                     {pendingListings.map(p => (
-                        <div key={p.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                            <p className="font-bold text-sm mb-1 line-clamp-1">{p.title}</p>
-                            <p className="text-[10px] text-gray-400 uppercase font-bold mb-3">{p.advisorName || 'Sistem'}</p>
+                        <div key={p.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                            <div className="flex justify-between items-start mb-4">
+                                optical-center
+                                <div>
+                                    <p className="font-bold text-dies-dark line-clamp-1 mb-1">{p.title}</p>
+                                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">{p.advisorName || 'İSİMSİZ DANIŞMAN'}</p>
+                                </div>
+                                <span className="font-black text-dies-blue text-xs">{p.price.toLocaleString()} TL</span>
+                            </div>
                             <div className="flex gap-2">
-                                <button onClick={() => navigate(`/ilan/${p.id}`)} className="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-xs font-bold">İncele</button>
-                                <button onClick={() => handleApproveListing(p.id)} className="flex-1 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold">Onayla</button>
-                                <button onClick={() => handleRejectListing(p.id)} className="flex-1 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold">Red</button>
+                                <button onClick={() => navigate(`/ilan/${p.id}`)} className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-100 rounded-xl text-xs font-black uppercase transition-all">Görüntüle</button>
+                                <button onClick={() => handleApproveListing(p.id)} className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase transition-all">Onayla</button>
+                                <button onClick={() => handleRejectListing(p.id)} className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase transition-all">Red</button>
                             </div>
                         </div>
                     ))}
-                    {pendingListings.length === 0 && <p className="text-xs text-gray-400 italic">Bekleyen onay bulunmuyor.</p>}
+                    {pendingListings.length === 0 && (
+                        <div className="text-center py-10">
+                            <CheckCircle size={48} className="mx-auto text-green-200 mb-4" />
+                            <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Bekleyen ilan bulunmuyor.</p>
+                        </div>
+                    )}
                 </div>
             </div>
-            {/* Advisor Applications */}
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-blue-600"><Briefcase size={20} /> Danışman Başvuruları</h3>
-                <div className="space-y-3">
-                  {advisorApplications.map(app => (
-                    <div key={app.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                      <p className="font-bold text-sm mb-1">{app.firstName} {app.lastName}</p>
-                      <p className="text-xs text-gray-500 mb-3">{app.phone}</p>
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-soft">
+                <h3 className="font-black text-xl mb-6 flex items-center gap-2 text-dies-dark"><Briefcase size={24} className="text-blue-500" /> Başvurular</h3>
+                <div className="space-y-4">
+                  {[...advisorApplications, ...officeApplications].map((app: any) => (
+                    <div key={app.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <p className="font-bold text-dies-dark mb-1">{app.firstName} {app.lastName}</p>
+                            <p className="text-xs text-gray-500 font-medium">{app.phone} • {app.email}</p>
+                        </div>
+                        <span className="bg-blue-100 text-dies-blue text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest">{app.type === 'advisor' ? 'Danışman' : 'Ofis'}</span>
+                      </div>
                       <div className="flex gap-2">
-                        <button onClick={() => handleApplicationStatus(app.id, 'approved')} className="flex-1 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold">Kabul</button>
-                        <button onClick={() => handleApplicationStatus(app.id, 'rejected')} className="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-bold">Red</button>
+                        <button onClick={() => handleApplicationStatus(app.id, 'approved')} className="flex-1 py-3 bg-dies-blue hover:bg-blue-900 text-white rounded-xl text-xs font-black uppercase transition-all">Kabul Et</button>
+                        <button onClick={() => handleApplicationStatus(app.id, 'rejected')} className="flex-1 py-3 bg-white border border-gray-200 text-gray-500 rounded-xl text-xs font-black uppercase transition-all">Reddet</button>
                       </div>
                     </div>
                   ))}
-                  {advisorApplications.length === 0 && <p className="text-xs text-gray-400 italic">Yeni başvuru bulunmuyor.</p>}
+                  {advisorApplications.length === 0 && officeApplications.length === 0 && (
+                      <div className="text-center py-10">
+                          <CheckCircle size={48} className="mx-auto text-blue-200 mb-4" />
+                          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Yeni başvuru bulunmuyor.</p>
+                      </div>
+                  )}
                 </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* GENERATED PASSWORD MODAL */}
+      {/* GENERATED PASSWORD MODAL - Full Screen on Mobile */}
       <AnimatePresence>
         {generatedPassModal.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
-              <div className="w-16 h-16 bg-blue-100 text-dies-blue rounded-full flex items-center justify-center mx-auto mb-6">
-                <Key size={32} />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-md">
+            <MotionDiv 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-none sm:rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center h-full sm:h-auto flex flex-col justify-center"
+            >
+              <div className="w-20 h-20 bg-blue-50 text-dies-blue rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <Key size={40} />
               </div>
-              <h3 className="text-xl font-bold mb-2">Şifre Sıfırlandı</h3>
-              <p className="text-sm text-gray-500 mb-6"><span className="font-bold text-dies-dark">{generatedPassModal.userName}</span> için oluşturulan yeni şifre aşağıdadır.</p>
+              <h3 className="text-2xl font-black mb-2 tracking-tighter">Şifre Sıfırlandı</h3>
+              <p className="text-sm text-gray-500 mb-8 font-medium">
+                <span className="font-bold text-dies-dark">{generatedPassModal.userName}</span> için yeni erişim şifresi:
+              </p>
               
-              <div className="bg-gray-100 p-4 rounded-xl flex items-center justify-between gap-2 mb-4">
-                <code className="text-lg font-black text-dies-blue tracking-wider">{generatedPassModal.password}</code>
-                <button onClick={() => copyToClipboard(generatedPassModal.password!)} className="p-2 text-gray-400 hover:text-dies-blue"><Copy size={20}/></button>
+              <div className="bg-gray-100 p-5 rounded-2xl flex items-center justify-between gap-4 mb-6 border border-gray-200 group">
+                <code className="text-2xl font-black text-dies-blue tracking-widest">{generatedPassModal.password}</code>
+                <button onClick={() => copyToClipboard(generatedPassModal.password!)} className="p-3 text-gray-400 hover:text-dies-blue hover:bg-white rounded-xl transition-all"><Copy size={24}/></button>
               </div>
               
-              <p className="text-[10px] text-red-500 font-bold uppercase mb-8">DİKKAT: BU ŞİFRE BİR DAHA GÖSTERİLMEYECEKTİR.</p>
+              <div className="bg-red-50 p-4 rounded-xl mb-10">
+                <p className="text-[11px] text-red-600 font-black uppercase tracking-widest leading-relaxed">BU ŞİFREYİ ŞİMDİ KOPYALAYIN. BİR DAHA GÖSTERİLMEYECEKTİR.</p>
+              </div>
               
-              <button onClick={() => setGeneratedPassModal({ open: false })} className="w-full bg-dies-dark text-white py-3 rounded-lg font-bold">Kapat</button>
-            </div>
+              <button onClick={() => setGeneratedPassModal({ open: false })} className="w-full bg-dies-dark text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl transition-transform active:scale-95">PANELİ KAPAT</button>
+            </MotionDiv>
           </div>
         )}
       </AnimatePresence>
