@@ -230,6 +230,8 @@ export const CreateListing = () => {
         buildingAge: category === 'Konut' ? formData.get('building_age') : undefined,
         heatingType: category === 'Konut' ? formData.get('heating_type') : undefined,
         isFurnished: category === 'Konut' ? formData.get('is_furnished') === '1' : false,
+        floorLocation: formData.get('floor_location'),
+        hasBalcony: selectedFeatures.includes('Balkon') || formData.get('has_balcony') === '1',
       };
 
       if (editingProperty) {
@@ -294,6 +296,7 @@ export const CreateListing = () => {
   const labelClass = `block text-sm font-bold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`;
 
   const isResidental = category === 'Konut';
+  const floorOptions = ["Bodrum Kat", "Giriş Kat", "Bahçe Katı", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11-20", "21+"];
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 pt-32">
@@ -349,7 +352,7 @@ export const CreateListing = () => {
                  </select>
               </div>
               <div>
-                <label className={labelClass}>Fiyat (TL)</label>
+                <label className={labelClass}>Fiyat (₺)</label>
                 <input required name="price" type="number" min="0" defaultValue={editingProperty?.price} className={inputClass} />
               </div>
             </div>
@@ -365,8 +368,11 @@ export const CreateListing = () => {
               </div>
               {isResidental && (
                 <div>
-                  <label className={labelClass}>Banyo Sayısı</label>
-                  <input name="bathrooms" type="number" min="0" defaultValue={editingProperty?.bathrooms || 1} className={inputClass} />
+                  <label className={labelClass}>Bulunduğu Kat</label>
+                  <select name="floor_location" defaultValue={editingProperty?.floorLocation} className={inputClass}>
+                    <option value="">Seçiniz</option>
+                    {floorOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
                 </div>
               )}
             </div>
@@ -377,15 +383,12 @@ export const CreateListing = () => {
                   <div>
                     <label className={labelClass}>Oda Sayısı</label>
                     <select name="bedrooms" defaultValue={editingProperty?.bedrooms} className={inputClass}>
-                      <option>1+0 (Stüdyo)</option>
+                      <option>1+0</option>
                       <option>1+1</option>
                       <option>2+1</option>
                       <option>3+1</option>
                       <option>4+1</option>
-                      <option>4.5+1</option>
                       <option>5+1</option>
-                      <option>5+2</option>
-                      <option>6+1</option>
                       <option>Villa Tipi</option>
                     </select>
                   </div>
@@ -397,7 +400,6 @@ export const CreateListing = () => {
                       <option>Yerden Isıtma</option>
                       <option>Klima</option>
                       <option>Soba</option>
-                      <option>Yok</option>
                     </select>
                   </div>
                   <div>
@@ -411,18 +413,27 @@ export const CreateListing = () => {
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label className={labelClass}>Eşyalı mı?</label>
-                  <select name="is_furnished" defaultValue={editingProperty?.isFurnished ? "1" : "0"} className={inputClass}>
-                    <option value="0">Hayır</option>
-                    <option value="1">Evet</option>
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelClass}>Eşyalı mı?</label>
+                    <select name="is_furnished" defaultValue={editingProperty?.isFurnished ? "1" : "0"} className={inputClass}>
+                      <option value="0">Hayır</option>
+                      <option value="1">Evet</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Balkon Var mı?</label>
+                    <select name="has_balcony" defaultValue={editingProperty?.hasBalcony ? "1" : "0"} className={inputClass}>
+                      <option value="0">Hayır</option>
+                      <option value="1">Evet</option>
+                    </select>
+                  </div>
                 </div>
               </>
             )}
 
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-              <label className={`${labelClass} mb-4 text-lg`}>Özellikler</label>
+              <label className={`${labelClass} mb-4 text-lg font-black`}>Ek Özellikler</label>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {availableFeatures.map(feature => (
                   <label key={feature} className="flex items-center gap-2 cursor-pointer group">
@@ -435,7 +446,7 @@ export const CreateListing = () => {
                       checked={selectedFeatures.includes(feature)}
                       onChange={() => handleFeatureToggle(feature)}
                     />
-                    <span className="text-sm text-gray-700">{feature}</span>
+                    <span className="text-sm font-semibold text-gray-700">{feature}</span>
                   </label>
                 ))}
               </div>
@@ -472,8 +483,8 @@ export const CreateListing = () => {
                 ) : (
                   <>
                     <UploadCloud className={`mx-auto mb-2 w-12 h-12 ${isDragging ? 'text-dies-blue' : 'text-gray-400'}`} />
-                    <p className="font-bold text-lg mb-1">Sürükle veya Seç</p>
-                    <p className="text-gray-500 text-sm">JPG, PNG (Max 15)</p>
+                    <p className="font-black text-lg mb-1 uppercase tracking-tight">Sürükle veya Seç</p>
+                    <p className="text-gray-500 text-sm">JPG, PNG veya WEBP (Max 15 Fotoğraf)</p>
                   </>
                 )}
                 <input disabled={isCompressing} ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
@@ -495,8 +506,8 @@ export const CreateListing = () => {
               )}
             </div>
 
-            <button disabled={isCompressing || isLoading} type="submit" className={`w-full bg-dies-blue text-white py-4 rounded-lg font-bold hover:bg-blue-800 shadow-lg transform transition hover:scale-[1.01] flex items-center justify-center gap-2 ${isCompressing ? 'opacity-50 cursor-not-allowed' : ''}`}>
-               {isLoading ? <Loader className="animate-spin" /> : <><CheckCircle size={20} /> {editingProperty ? 'KAYDET' : 'İLANI YAYINLA'}</>}
+            <button disabled={isCompressing || isLoading} type="submit" className={`w-full bg-dies-blue text-white py-4 rounded-lg font-black hover:bg-blue-800 shadow-lg transform transition hover:scale-[1.01] flex items-center justify-center gap-2 ${isCompressing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+               {isLoading ? <Loader className="animate-spin" /> : <><CheckCircle size={20} /> {editingProperty ? 'İLANI GÜNCELLE' : 'ŞİMDİ YAYINLA'}</>}
             </button>
           </div>
         </form>

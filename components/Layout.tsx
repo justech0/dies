@@ -16,12 +16,12 @@ interface BrandLogoProps {
 const BrandLogo: React.FC<BrandLogoProps> = ({ isTransparent }) => (
   <div className={`
     flex items-center justify-center transition-all duration-300 hover:scale-105 
-    px-3 py-1.5 md:px-4 md:py-2 rounded-xl border 
+    px-2 py-1 md:px-3 md:py-1.5 rounded-lg border 
     ${isTransparent 
       ? 'border-white/10 bg-white/5 backdrop-blur-sm shadow-sm' 
       : 'border-gray-100 bg-white shadow-soft'}
   `}>
-    <DiesLogoIcon className="h-10 md:h-14 w-auto" />
+    <DiesLogoIcon className="h-7 md:h-9 w-auto" />
   </div>
 );
 
@@ -157,7 +157,7 @@ const Navbar = () => {
           >
             <div className="p-6 flex justify-between items-center border-b border-gray-100">
               <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
-                <DiesLogoIcon className="h-10 w-auto" />
+                <DiesLogoIcon className="h-8 w-auto" />
               </Link>
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-dies-blue hover:text-dies-red">
                 <X size={32} />
@@ -264,8 +264,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           
           <div>
-            <div className="mb-6 bg-white w-fit p-2 rounded-lg shadow-soft">
-               <DiesLogoIcon className="h-10 w-auto" />
+            <div className="mb-6 bg-white w-fit p-1.5 rounded-lg shadow-soft">
+               <DiesLogoIcon className="h-8 w-auto" />
             </div>
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
               Batman'da konut, arsa ve ticari gayrimenkulde güvenilir danışmanlık. Hayalinizdeki mülke Dies güvencesiyle ulaşın.

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Filter, Search, RotateCcw } from 'lucide-react';
+import { Filter, Search, RotateCcw, Home, MapPin, Building2, SquareStack, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 
 interface FilterProps {
@@ -8,10 +9,11 @@ interface FilterProps {
 }
 
 export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const initialFilters = {
     status: 'Tümü',
     type: 'Tümü',
-    province: '', // Now stores ID or Name depending on backend requirement. Let's assume Name for filtering URL consistency
+    province: '',
     district: '',
     neighborhood: '',
     minPrice: '',
@@ -21,7 +23,9 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
     maxArea: '',
     heatingType: 'Tümü',
     buildingAge: 'Tümü',
-    isFurnished: 'Tümü'
+    isFurnished: 'Tümü',
+    floorLocation: 'Tümü',
+    hasBalcony: 'Tümü'
   };
 
   const [filters, setFilters] = useState(initialFilters);
@@ -29,16 +33,12 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
   const [districts, setDistricts] = useState<any[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
 
-  // Load Cities on Mount
   useEffect(() => {
       api.locations.getCities().then(setCities).catch(console.error);
   }, []);
 
-  // Load Districts when City changes
   useEffect(() => {
       if (filters.province) {
-          // Find city ID if filters.province stores ID, or find by name
-          // Assuming API returns {id, name}. 
           const city = cities.find(c => c.name === filters.province || c.id.toString() === filters.province);
           if (city) {
               api.locations.getDistricts(city.id).then(setDistricts).catch(console.error);
@@ -49,7 +49,6 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
       setNeighborhoods([]);
   }, [filters.province, cities]);
 
-  // Load Neighborhoods when District changes
   useEffect(() => {
       if (filters.district) {
           const dist = districts.find(d => d.name === filters.district || d.id.toString() === filters.district);
@@ -61,9 +60,10 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
       }
   }, [filters.district, districts]);
 
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    if (e.target.type === 'number' && parseFloat(value) < 0) return;
+
     if (name === 'province') {
         setFilters({ ...filters, province: value, district: '', neighborhood: '' });
     } else if (name === 'district') {
@@ -83,126 +83,168 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
     onFilter(initialFilters);
   };
 
-  const inputClass = "w-full p-3 rounded-lg border border-gray-200 bg-gray-50 text-dies-dark font-medium placeholder-gray-400 focus:ring-2 focus:ring-dies-blue focus:bg-white focus:border-transparent outline-none transition-all";
-  const labelClass = "block text-xs font-bold uppercase tracking-wider mb-2 text-dies-slate";
+  const inputClass = "w-full p-3 rounded-lg border border-gray-200 bg-gray-50 text-dies-dark font-semibold placeholder-gray-400 focus:ring-2 focus:ring-dies-blue focus:bg-white focus:border-transparent outline-none transition-all text-sm";
+  const labelClass = "block text-[11px] font-black uppercase tracking-wider mb-2 text-dies-slate flex items-center gap-1.5";
+
+  const floorOptions = ["Bodrum Kat", "Giriş Kat", "Bahçe Katı", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11-20", "21+"];
 
   return (
-    <form onSubmit={handleSubmit} className="p-5 md:p-8 rounded-3xl shadow-soft bg-white border border-gray-100">
-      <div className="flex items-center gap-2 mb-6 md:mb-8 pb-4 border-b border-gray-100">
-        <div className="p-2 bg-blue-50 rounded-lg text-dies-blue"><Filter size={20} /></div>
-        <h3 className="font-bold text-xl text-dies-dark">Detaylı Filtreleme</h3>
-      </div>
+    <div className="w-full">
+      {/* FILTER HEADER / BUTTON */}
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-5 md:p-6 bg-white rounded-2xl md:rounded-3xl shadow-soft border border-gray-100 group transition-all hover:shadow-md"
+      >
+        <div className="flex items-center gap-4">
+          <div className={`p-3 rounded-xl transition-all duration-300 ${isExpanded ? 'bg-dies-blue text-white' : 'bg-blue-50 text-dies-blue'}`}>
+            <Filter size={24} />
+          </div>
+          <div className="text-left">
+            <h3 className="font-black text-xl text-dies-dark tracking-tight leading-none mb-1">Detaylı Arama</h3>
+            <p className="text-xs text-dies-slate font-medium">Hayalinizdeki gayrimenkulü filtreleyin</p>
+          </div>
+        </div>
+        <div className="p-2 rounded-full bg-gray-50 text-gray-400 group-hover:bg-gray-100 transition-colors">
+            {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+        </div>
+      </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div>
-            <label className={labelClass}>İlan Durumu</label>
-            <select name="status" value={filters.status} onChange={handleChange} className={inputClass}>
-                <option value="Tümü">Tümü</option>
-                <option value="Satılık">Satılık</option>
-                <option value="Kiralık">Kiralık</option>
-                <option value="Satıldı">Satıldı</option>
-                <option value="Kiralandı">Kiralandı</option>
-            </select>
-        </div>
-        <div>
-            <label className={labelClass}>Gayrimenkul Tipi</label>
-            <select name="type" value={filters.type} onChange={handleChange} className={inputClass}>
-                <option value="Tümü">Tümü</option>
-                <option value="Konut">Konut</option>
-                <option value="Ticari">Ticari</option>
-                <option value="Arsa">Arsa</option>
-            </select>
-        </div>
-        <div>
-            <label className={labelClass}>Oda Sayısı</label>
-            <select name="roomCount" value={filters.roomCount} onChange={handleChange} className={inputClass}>
-                <option value="Tümü">Tümü</option>
-                <option value="1+0">1+0 (Stüdyo)</option>
-                <option value="1+1">1+1</option>
-                <option value="2+0">2+0</option>
-                <option value="2+1">2+1</option>
-                <option value="3+1">3+1</option>
-                <option value="4+1">4+1</option>
-                <option value="5+1">5+1 ve üzeri</option>
-            </select>
-        </div>
-        <div>
-            <label className={labelClass}>Eşyalı</label>
-            <select name="isFurnished" value={filters.isFurnished} onChange={handleChange} className={inputClass}>
-                <option value="Tümü">Tümü</option>
-                <option value="Evet">Evet</option>
-                <option value="Hayır">Hayır</option>
-            </select>
-        </div>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.form 
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: 'auto', opacity: 1, marginTop: 24 }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            transition={{ duration: 0.4, ease: "circOut" }}
+            onSubmit={handleSubmit} 
+            className="overflow-hidden p-6 md:p-8 rounded-3xl shadow-xl bg-white border border-gray-100"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+              {/* Temel Bilgiler */}
+              <div>
+                  <label className={labelClass}><Home size={14}/> İlan Durumu</label>
+                  <select name="status" value={filters.status} onChange={handleChange} className={inputClass}>
+                      <option value="Tümü">Tümü</option>
+                      <option value="Satılık">Satılık</option>
+                      <option value="Kiralık">Kiralık</option>
+                  </select>
+              </div>
+              <div>
+                  <label className={labelClass}><Building2 size={14}/> Gayrimenkul Tipi</label>
+                  <select name="type" value={filters.type} onChange={handleChange} className={inputClass}>
+                      <option value="Tümü">Tümü</option>
+                      <option value="Konut">Konut</option>
+                      <option value="Ticari">Ticari</option>
+                      <option value="Arsa">Arsa</option>
+                  </select>
+              </div>
+              <div>
+                  <label className={labelClass}><SquareStack size={14}/> Oda Sayısı</label>
+                  <select name="roomCount" value={filters.roomCount} onChange={handleChange} className={inputClass}>
+                      <option value="Tümü">Tümü</option>
+                      <option value="1+0">1+0</option>
+                      <option value="1+1">1+1</option>
+                      <option value="2+1">2+1</option>
+                      <option value="3+1">3+1</option>
+                      <option value="4+1">4+1</option>
+                      <option value="5+1 ve üzeri">5+1 ve üzeri</option>
+                  </select>
+              </div>
+              <div>
+                  <label className={labelClass}>Eşya Durumu</label>
+                  <select name="isFurnished" value={filters.isFurnished} onChange={handleChange} className={inputClass}>
+                      <option value="Tümü">Tümü</option>
+                      <option value="Evet">Eşyalı</option>
+                      <option value="Hayır">Eşyasız</option>
+                  </select>
+              </div>
 
-        <div>
-            <label className={labelClass}>İl</label>
-            <select name="province" value={filters.province} onChange={handleChange} className={inputClass}>
-                <option value="">İl Seçiniz</option>
-                {cities.map(city => (
-                    <option key={city.id} value={city.name}>{city.name}</option>
-                ))}
-            </select>
-        </div>
-        <div>
-            <label className={labelClass}>İlçe</label>
-            <select name="district" value={filters.district} onChange={handleChange} className={inputClass} disabled={!filters.province}>
-                <option value="">İlçe Seçiniz</option>
-                {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
-            </select>
-        </div>
-        <div>
-            <label className={labelClass}>Mahalle</label>
-            <select name="neighborhood" value={filters.neighborhood} onChange={handleChange} className={inputClass} disabled={!filters.district}>
-                <option value="">Mahalle Seçiniz</option>
-                {neighborhoods.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
-            </select>
-        </div>
-        <div>
-            <label className={labelClass}>Isınma Tipi</label>
-            <select name="heatingType" value={filters.heatingType} onChange={handleChange} className={inputClass}>
-                <option value="Tümü">Tümü</option>
-                <option value="Kombi">Doğalgaz (Kombi)</option>
-                <option value="Merkezi">Merkezi Sistem</option>
-                <option value="Yerden">Yerden Isıtma</option>
-                <option value="Klima">Klima</option>
-                <option value="Soba">Soba</option>
-            </select>
-        </div>
+              {/* Konum */}
+              <div>
+                  <label className={labelClass}><MapPin size={14}/> İl</label>
+                  <select name="province" value={filters.province} onChange={handleChange} className={inputClass}>
+                      <option value="">İl Seçiniz</option>
+                      {cities.map(city => (
+                          <option key={city.id} value={city.name}>{city.name}</option>
+                      ))}
+                  </select>
+              </div>
+              <div>
+                  <label className={labelClass}>İlçe</label>
+                  <select name="district" value={filters.district} onChange={handleChange} className={inputClass} disabled={!filters.province}>
+                      <option value="">İlçe Seçiniz</option>
+                      {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                  </select>
+              </div>
+              <div>
+                  <label className={labelClass}>Mahalle</label>
+                  <select name="neighborhood" value={filters.neighborhood} onChange={handleChange} className={inputClass} disabled={!filters.district}>
+                      <option value="">Mahalle Seçiniz</option>
+                      {neighborhoods.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
+                  </select>
+              </div>
+              <div>
+                  <label className={labelClass}>Bulunduğu Kat</label>
+                  <select name="floorLocation" value={filters.floorLocation} onChange={handleChange} className={inputClass}>
+                      <option value="Tümü">Tümü</option>
+                      {floorOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+              </div>
 
-        <div className="lg:col-span-2">
-            <label className={labelClass}>Fiyat Aralığı (TL)</label>
-            <div className="flex flex-col sm:flex-row gap-3">
-                <input type="number" name="minPrice" value={filters.minPrice} onChange={handleChange} placeholder="Min" className={inputClass} />
-                <input type="number" name="maxPrice" value={filters.maxPrice} onChange={handleChange} placeholder="Max" className={inputClass} />
+              {/* Teknik Özellikler */}
+              <div>
+                  <label className={labelClass}>Balkon</label>
+                  <select name="hasBalcony" value={filters.hasBalcony} onChange={handleChange} className={inputClass}>
+                      <option value="Tümü">Tümü</option>
+                      <option value="Evet">Var</option>
+                      <option value="Hayır">Yok</option>
+                  </select>
+              </div>
+              <div>
+                  <label className={labelClass}>Isınma</label>
+                  <select name="heatingType" value={filters.heatingType} onChange={handleChange} className={inputClass}>
+                      <option value="Tümü">Tümü</option>
+                      <option value="Kombi">Kombi</option>
+                      <option value="Merkezi">Merkezi</option>
+                      <option value="Yerden">Yerden Isıtma</option>
+                  </select>
+              </div>
+
+              <div className="lg:col-span-2">
+                  <label className={labelClass}>Fiyat Aralığı (₺)</label>
+                  <div className="flex gap-3">
+                      <input type="number" min="0" name="minPrice" value={filters.minPrice} onChange={handleChange} placeholder="Min" className={inputClass} />
+                      <input type="number" min="0" name="maxPrice" value={filters.maxPrice} onChange={handleChange} placeholder="Max" className={inputClass} />
+                  </div>
+              </div>
+
+              <div className="lg:col-span-2">
+                  <label className={labelClass}>Metrekare (m²)</label>
+                  <div className="flex gap-3">
+                      <input type="number" min="0" name="minArea" value={filters.minArea} onChange={handleChange} placeholder="Min" className={inputClass} />
+                      <input type="number" min="0" name="maxArea" value={filters.maxArea} onChange={handleChange} placeholder="Max" className={inputClass} />
+                  </div>
+              </div>
             </div>
-        </div>
-         <div className="lg:col-span-2">
-            <label className={labelClass}>Metrekare (m²)</label>
-            <div className="flex flex-col sm:flex-row gap-3">
-                <input type="number" name="minArea" value={filters.minArea} onChange={handleChange} placeholder="Min" className={inputClass} />
-                <input type="number" name="maxArea" value={filters.maxArea} onChange={handleChange} placeholder="Max" className={inputClass} />
-            </div>
-        </div>
-      </div>
 
-      <div className="mt-8 flex flex-col sm:flex-row justify-end gap-4">
-        <button 
-            type="button"
-            onClick={handleClear}
-            className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-4 rounded-xl font-bold transition-all w-full sm:w-auto"
-        >
-            <RotateCcw size={20} />
-            Temizle
-        </button>
-        <button 
-            type="submit" 
-            className="flex items-center justify-center gap-2 bg-dies-red hover:bg-red-700 text-white px-10 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl w-full sm:w-auto"
-        >
-            <Search size={20} />
-            Sonuçları Göster
-        </button>
-      </div>
-    </form>
+            <div className="mt-10 flex flex-col md:flex-row gap-4">
+              <button 
+                  type="submit" 
+                  className="flex-grow flex items-center justify-center gap-3 bg-dies-blue hover:bg-blue-900 text-white py-4 rounded-2xl font-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-widest text-sm"
+              >
+                  <Search size={20} /> İlanları Listele
+              </button>
+              <button 
+                  type="button"
+                  onClick={handleClear}
+                  className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-500 py-4 px-8 rounded-2xl font-black transition-all uppercase tracking-widest text-sm"
+              >
+                  <RotateCcw size={18} /> Filtreleri Temizle
+              </button>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };

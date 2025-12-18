@@ -4,7 +4,7 @@ export interface Property {
   title: string;
   price: number;
   currency: 'TL' | 'USD' | 'EUR';
-  location: string; // Generic location string (kept for backward compatibility)
+  location: string; 
   province?: string;
   district?: string;
   neighborhood?: string;
@@ -12,9 +12,9 @@ export interface Property {
   category: 'Konut' | 'Ticari' | 'Arsa';
   image: string;
   images?: string[];
-  bedrooms?: string; // "3+1", "2+0" etc.
+  bedrooms?: string; 
   bathrooms?: number;
-  area: number; // Gross
+  area: number; 
   netArea?: number;
   advisorId: number;
   sahibindenLink?: string;
@@ -22,17 +22,15 @@ export interface Property {
   features: string[];
   date: string;
   
-  // New Fields
-  buildingAge?: string; // 0, 1-5, 5-10...
-  heatingType?: string; // Kombi, Merkezi, etc.
-  floorLocation?: number | string; // 1, 2, Giriş...
+  buildingAge?: string;
+  heatingType?: string;
+  floorLocation?: number | string;
   totalFloors?: number;
   isFurnished?: boolean;
-  isInComplex?: boolean; // Site içerisinde mi
+  isInComplex?: boolean;
   balconyCount?: number;
-  hasBalcony?: boolean; // New field
+  hasBalcony?: boolean;
 
-  // Join Fields (Returned from API to display in cards)
   advisorName?: string;
   advisorImage?: string;
 }
@@ -45,7 +43,7 @@ export interface Advisor {
   image: string;
   isFounder?: boolean;
   about?: string;
-  specializations?: string[]; // New field
+  specializations?: string[];
   sahibindenLink?: string;
   social?: {
     instagram?: string;
@@ -55,10 +53,10 @@ export interface Advisor {
   stats?: {
     totalSales: number;
     activeListings: number;
-    experience: number; // years
+    experience: number;
     avgSalePrice?: string;
     highestSalePrice?: string;
-    clientSatisfaction?: number; // 0-5
+    clientSatisfaction?: number;
   }
 }
 
@@ -66,7 +64,7 @@ export interface User {
   id: number;
   name: string;
   type: 'admin' | 'advisor' | 'user';
-  role: 'admin' | 'advisor' | 'user'; // Normalized to role
+  role: 'admin' | 'advisor' | 'user';
   email: string;
   phone?: string;
   image?: string;
@@ -79,16 +77,16 @@ export interface Office {
   name: string;
   address: string;
   phone: string;
-  phone2?: string; // New field
+  phone2?: string;
   whatsapp?: string;
-  image: string; // Main exterior image
+  image: string;
   gallery?: string[];
-  locationUrl?: string; // Google Maps Link
+  locationUrl?: string;
   workingHours: string;
   isHeadquarters: boolean;
   city: string;
   district: string;
-  description?: string; // New field for About Office
+  description?: string;
 }
 
 export interface OfficeApplication {
@@ -103,8 +101,8 @@ export interface OfficeApplication {
   education?: string;
   date: string;
   status: 'pending' | 'reviewed' | 'approved' | 'rejected';
-  budget?: string; // Added
-  details?: string; // Added
+  budget?: string;
+  details?: string;
 }
 
 export interface AdvisorApplication {
@@ -115,17 +113,17 @@ export interface AdvisorApplication {
   phone: string;
   birthDate?: string;
   education?: string;
-  experience?: string; // 'Evet' | 'Hayır'
+  experience?: string;
   date: string;
   status: 'pending' | 'reviewed' | 'approved' | 'rejected';
 }
 
 export interface FilterState {
-  status: string; // Satılık/Kiralık
-  type: string; // Konut/Arsa...
+  status: string;
+  type: string;
   minPrice: string;
   maxPrice: string;
-  roomCount: string; // Multi-select potential
+  roomCount: string;
   minArea: string;
   maxArea: string;
   province: string;
@@ -133,13 +131,14 @@ export interface FilterState {
   neighborhood: string;
   heatingType: string;
   buildingAge: string;
-  isFurnished: string; // "Tümü", "Evet", "Hayır"
+  isFurnished: string;
+  floorLocation: string;
+  hasBalcony: string;
 }
 
-// Location Data Types
 export interface LocationData {
   [city: string]: {
-    [district: string]: string[]; // Neighborhoods
+    [district: string]: string[];
   }
 }
 

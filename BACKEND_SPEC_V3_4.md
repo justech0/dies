@@ -25,7 +25,7 @@ Bu döküman Dies Gayrimenkul PHP API'si için tek kaynak noktasıdır. Backend 
   - `listing_state (active|sold|rented)`
   - `image (string - cover), images (json - array)`
   - `bedrooms (v20), bathrooms (int), area_gross (int), area_net (int)`
-  - `heating_type, building_age, is_furnished (bool), features (json - array)`
+  - `heating_type, building_age, is_furnished (bool), has_balcony (bool), floor_location (string), features (json - array)`
   - `sahibinden_link, is_featured (bool), rejection_reason (text), approved_by (FK), approved_at, deleted_at, created_at, updated_at`
 
 ---
@@ -38,10 +38,12 @@ Tüm yanıtlar `{ "success": true, "data": ... }` zarfında dönmelidir.
 Backend, frontend'den gelen şu parametreleri KABUL ETMELİ ve iç kolonlara map etmelidir:
 - `status`: "Satılık" -> intent=sale, "Kiralık" -> intent=rent, "Satıldı" -> state=sold, "Kiralandı" -> state=rented
 - `type`: "Konut"|"Ticari"|"Arsa" -> category
-- `minPrice / maxPrice`: price aralığı
-- `minArea / maxArea`: area_gross aralığı
+- `minPrice / maxPrice`: price aralığı (Pozitif değer kontrolü)
+- `minArea / maxArea`: area_gross aralığı (Pozitif değer kontrolü)
 - `roomCount`: bedrooms kolonu
 - `isFurnished`: "Evet" -> is_furnished=1
+- `hasBalcony`: "Evet" -> has_balcony=1
+- `floorLocation`: floor_location kolonu
 - `province / district / neighborhood`: Konum filtreleri
 
 **Response Data:** Her property objesi mutlaka `"type"` alanını içermelidir (Örn: "Satılık", "Satıldı").
