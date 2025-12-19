@@ -142,6 +142,18 @@ export interface LocationData {
   }
 }
 
+export interface Place {
+  id: string;
+  raw_id?: number;
+  name: string;
+  kind: 'neighborhood' | 'village';
+}
+
+export interface LocationItem {
+  id: number | string;
+  name: string;
+}
+
 export interface SiteSettings {
     heroImage: string;
     heroTitle: string;

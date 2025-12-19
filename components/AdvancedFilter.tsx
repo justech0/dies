@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Filter, Search, RotateCcw, Home, MapPin, Building2, SquareStack, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
+import { LocationItem, Place } from '../types';
 
 interface FilterProps {
   onFilter: (filters: any) => void;
@@ -29,9 +30,9 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
   };
 
   const [filters, setFilters] = useState(initialFilters);
-  const [cities, setCities] = useState<any[]>([]);
-  const [districts, setDistricts] = useState<any[]>([]);
-  const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
+  const [cities, setCities] = useState<LocationItem[]>([]);
+  const [districts, setDistricts] = useState<LocationItem[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<Place[]>([]);
 
   useEffect(() => {
       api.locations.getCities().then(setCities).catch(console.error);
@@ -166,7 +167,7 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
                   <select name="province" value={filters.province} onChange={handleChange} className={inputClass}>
                       <option value="">İl Seçiniz</option>
                       {cities.map(city => (
-                          <option key={city.id} value={city.name}>{city.name}</option>
+                          <option key={String(city.id)} value={city.name}>{city.name}</option>
                       ))}
                   </select>
               </div>
@@ -174,14 +175,14 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
                   <label className={labelClass}>İlçe</label>
                   <select name="district" value={filters.district} onChange={handleChange} className={inputClass} disabled={!filters.province}>
                       <option value="">İlçe Seçiniz</option>
-                      {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                      {districts.map(d => <option key={String(d.id)} value={d.name}>{d.name}</option>)}
                   </select>
               </div>
               <div>
                   <label className={labelClass}>Mahalle / Köy</label>
                   <select name="neighborhood" value={filters.neighborhood} onChange={handleChange} className={inputClass} disabled={!filters.district}>
                       <option value="">Mahalle / Köy Seçiniz</option>
-                      {neighborhoods.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
+                      {neighborhoods.map(n => <option key={String(n.id)} value={n.name}>{n.name}</option>)}
                   </select>
               </div>
               <div>

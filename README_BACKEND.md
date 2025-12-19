@@ -4,14 +4,16 @@ Bu klasör, Vite/React frontend'i bozmadan `/api` altında çalışan PHP 8 + My
 
 ## Kurulum
 1. `cd api`
-2. `cp .env.example .env` dosyasını doldurun (DB_HOST/DB_NAME/DB_USER/DB_PASS/JWT_SECRET zorunlu).
-3. Üretim kurulumu için vendor oluşturun:
+2. `cp .env.example .env` dosyasını doldurun (DB_HOST / DB_NAME / DB_USER / DB_PASS / JWT_SECRET zorunlu). Yanlış env anahtarları bağlantıyı kırar.
+3. Tek veritabanı kurulumu: boş bir MySQL veritabanı oluşturun ve `database/dies_full_schema_with_locations.sql` dosyasını phpMyAdmin veya mysql CLI ile içe aktarın. Ek bir `schema.sql`/`database.sql` **kullanmayın**; eski dosyalar kaldırıldı.
+4. Üretim kurulumu için vendor klasörünü oluşturun:
    ```bash
+   cd api
    composer install --no-dev --optimize-autoloader
    ```
-   > `vendor` yoksa API 500 döner; kurulumu tamamlamadan deploy etmeyin.
-4. Tek SQL dosyasını içeri aktarın: `dies_full_schema_with_locations.sql` (veya proje ile gelen tam şema dosyası). Ek/ikincil lokasyon tablosu yaratmayın.
-5. `uploads` klasörünün yazılabilir olduğundan emin olun; yoksa uygulama ilk açılışta otomatik oluşturur.
+   - Hostinger gibi composer olmayan ortamlarda vendor'ı lokalde oluşturup `api/vendor` klasörünü sunucuya yükleyebilirsiniz.
+   - `vendor` yoksa API 500 döndürür.
+5. `uploads` klasörünün yazılabilir olduğundan emin olun; yoksa uygulama ilk açılışta otomatik oluşturur. `api/error.txt` de yazılabilir olmalıdır.
 6. Web sunucusunda `.htaccess` ile tüm istekleri `/api/index.php`'ye yönlendirin.
 
 ## Önemli Yol Notu
@@ -23,8 +25,15 @@ Frontend `VITE_API_URL + /api` kullanır. Router şu sırayla davranır:
 ## CORS
 `FRONTEND_URL` tanımlıysa sadece o origin'e izin verilir; yoksa `*` döner. Preflight istekler 200 döner.
 
+> Öneri: FRONTEND_URL değerini mutlaka ayarlayın (örn. `https://domain.com`) ve Vite tarafında `VITE_API_URL` = aynı domain.
+
 ## Loglama
 Hatalar `api/error.txt` dosyasına `[timestamp] request_id method path user_id message stack` formatında yazılır. Token gibi hassas veriler maskeleme ile korunur.
 
 ## Varsayılan Yönetici
 SQL seed içerisinde `admin@dies.local / admin123` kullanıcısı bulunur. Üretimde bu şifreyi mutlaka değiştirin.
+
+## Hızlı Sağlık Kontrolü
+1) `https://domain.com/api/locations/cities` → JSON dönmeli.
+2) `https://domain.com/api/auth/login` → POST bekler, 405 dönmez (route varlığı doğrulanır).
+3) `.env` veya DB hatalı ise 500 + `api/error.txt` logu üretmeli (hata detaylarını logda, kullanıcıya JSON zarfta).

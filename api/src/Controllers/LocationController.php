@@ -40,6 +40,7 @@ class LocationController
         $neighborhoods = array_map(function ($row) {
             return [
                 'id' => 'n-' . $row['id'],
+                'raw_id' => (int)$row['id'],
                 'name' => $row['name'],
                 'kind' => 'neighborhood',
             ];
@@ -50,6 +51,7 @@ class LocationController
         $villages = array_map(function ($row) {
             return [
                 'id' => 'v-' . $row['id'],
+                'raw_id' => (int)$row['id'],
                 'name' => $row['name'],
                 'kind' => 'village',
             ];
@@ -68,6 +70,14 @@ class LocationController
         }
         $stmt = $pdo->prepare('SELECT id, name, town_id FROM villages WHERE district_id = ?' . $townClause . ' ORDER BY name');
         $stmt->execute($params);
-        Response::success($stmt->fetchAll());
+        $villages = array_map(function ($row) {
+            return [
+                'id' => 'v-' . $row['id'],
+                'raw_id' => (int)$row['id'],
+                'name' => $row['name'],
+                'kind' => 'village',
+            ];
+        }, $stmt->fetchAll());
+        Response::success($villages);
     }
 }
