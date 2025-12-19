@@ -1,33 +1,7 @@
-# Dies Gayrimenkul Platformu (V3.4)
-
-Batman'ın öncü gayrimenkul danışmanlık platformu için modernize edilmiş frontend katmanı.
-
-## 🚀 Başlangıç
-
-### Gereksinimler
-- Node.js (v18+)
-- Backend API (Codex tarafından spec dökümanına göre yazılacak)
-
-### Kurulum
-
-1. **Paketleri Yükleyin**:
-   ```bash
-   npm install
-   ```
-
-2. **Çalıştırma**:
-   ```bash
-   npm run dev
-   ```
-
-3. **Production Build**:
-   ```bash
-   npm run build
-   ```
-
+Front end :)
 ## 🛠 Backend Spec
 
-Bu proje gerçek bir API üzerinden çalışacak şekilde yapılandırılmıştır. Backend geliştiricisi için gerekli tüm teknik detaylar `BACKEND_SPEC_V3_4.md` dosyasında mevcuttur.
+Bu proje gerçek bir API üzerinden çalışacak şekilde yapılandırılmıştır. Backend geliştiricisi için gerekli tüm teknik detaylar `BACKEND_SPEC_V3_4.md` dosyasında mevcuttur. diğer detaylar promptta verilecektir.
 
 **API Bağlantısı**: `.env` dosyasında `VITE_API_URL` değişkenini backend adresinize göre ayarlayın.
 Örn: `VITE_API_URL=https://api.diesgayrimenkul.com`
