@@ -1,7 +1,6 @@
 
 import { Property, User, Advisor, Office, AdvisorApplication, OfficeApplication } from '../types';
 
-// API URL yapılandırması
 const getApiUrl = () => {
   try {
     // @ts-ignore
@@ -13,15 +12,6 @@ const getApiUrl = () => {
 
 const VITE_API_URL = getApiUrl();
 const API_BASE = VITE_API_URL ? `${VITE_API_URL}/api` : '/api';
-
-// Demo verileri (API erişilemez olduğunda arayüzün boş kalmaması için)
-const MOCK_USER = {
-  id: 1,
-  name: "Dies Demo",
-  email: "demo@dies.com",
-  role: "admin" as const,
-  type: "admin" as const
-};
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('dies_token');
@@ -36,11 +26,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     delete headers['Content-Type'];
   }
 
-  try {
-    // Eğer API URL'i yoksa veya geçersizse direkt mock/demo yanıtları dön (Geliştirme aşaması için)
-    if (!VITE_API_URL && endpoint.includes('/auth/me')) return MOCK_USER as unknown as T;
-    if (!VITE_API_URL && endpoint.includes('/properties')) return [] as unknown as T;
+  // API URL kontrolü
+  if (!VITE_API_URL && !window.location.hostname.includes('localhost')) {
+    console.error("VITE_API_URL tanımlanmamış! API istekleri başarısız olabilir.");
+  }
 
+  try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers,
@@ -59,23 +50,17 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       
       return result.data !== undefined ? result.data : result;
     } else {
-      // 404 durumunda kullanıcıyı tamamen engellememek için sessizce boş veri dön
       if (response.status === 404) {
-        console.warn(`API Endpoint bulunamadı (404): ${endpoint}. Lütfen VITE_API_URL yapılandırmasını kontrol edin.`);
-        if (endpoint.includes('/auth/me')) throw new Error("Oturum bulunamadı");
-        return (endpoint.includes('list') || endpoint.includes('properties') ? [] : {}) as T;
+        throw new Error(`API Endpoint bulunamadı (404): ${endpoint}. Lütfen VITE_API_URL yapılandırmasını kontrol edin.`);
       }
-      
       if (!response.ok) {
         throw new Error(`Sunucu Hatası: ${response.status}`);
       }
       return {} as T;
     }
   } catch (error) {
-    console.error("API Hatası:", error);
-    // Oturum kontrolü hatası ise yukarı fırlat, diğerlerinde boş veri dönerek UI'ı koru
-    if (endpoint.includes('/auth/me')) throw error;
-    return (endpoint.includes('list') || endpoint.includes('properties') ? [] : {}) as T;
+    console.error("API Bağlantı Hatası:", error);
+    throw error;
   }
 }
 

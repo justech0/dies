@@ -102,7 +102,7 @@ const Navbar = () => {
                        <LayoutDashboard size={16} /> Panel
                      </Link>
                    )}
-                   <Link to="/profil" className={`text-xs font-extrabold ${textClasses} px-2`}>
+                   <Link to="/profil" className={`text-xs font-extrabold ${textClasses} px-2 whitespace-nowrap`}>
                      {user.name}
                    </Link>
                    <button onClick={handleLogout} className={`p-2 ${isHome && !isScrolled ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-dies-red'}`} title="Çıkış Yap">
@@ -152,6 +152,7 @@ const Navbar = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-[60] flex flex-col bg-white"
           >
+            {/* MOBİL BAŞLIK: LOGO - BUTON - KAPAT */}
             <div className="p-4 flex items-center justify-between border-b border-gray-100 bg-white shadow-sm">
               <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="shrink-0">
                 <DiesLogoIcon className="h-6 w-auto" />

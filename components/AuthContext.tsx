@@ -27,7 +27,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(() => {
     // Başlangıçta localStorage'dan önbelleğe alınmış kullanıcıyı oku
     const savedUser = localStorage.getItem('dies_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,8 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 localStorage.setItem('dies_user', JSON.stringify(userData));
             } catch (error) {
                 console.error("Oturum geçersiz veya süresi dolmuş", error);
-                // Sadece API gerçekten hata verirse temizle (404 hariç)
-                if ((error as Error).message?.includes('401') || (error as Error).message?.includes('token')) {
+                // 401 veya token hatası durumunda temizle
+                const err = error as Error;
+                if (err.message?.includes('401') || err.message?.includes('token') || err.message?.includes('Oturum')) {
                     logout();
                 }
             }
