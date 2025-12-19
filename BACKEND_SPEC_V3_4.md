@@ -1,7 +1,7 @@
 
 # DİES GAYRİMENKUL - BACKEND IMPLEMENTATION SPEC (V3.4)
 
-Bu döküman Dies Gayrimenkul PHP API'si için tek kaynak noktasıdır. Backend bu dökümana %100 sadık kalmalıdır.
+Bu döküman Dies Gayrimenkul PHP API'si için tek kaynak noktasıdır. 
 
 ---
 
