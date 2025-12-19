@@ -26,11 +26,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     delete headers['Content-Type'];
   }
 
-  // API URL kontrolü
-  if (!VITE_API_URL && !window.location.hostname.includes('localhost')) {
-    console.error("VITE_API_URL tanımlanmamış! API istekleri başarısız olabilir.");
-  }
-
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
@@ -38,6 +33,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     });
 
     if (response.status === 204) return {} as T;
+
+    // API 404 veriyorsa ve bu bir liste isteği ise boş array dön (Hata fırlatıp UI'ı bozma)
+    if (response.status === 404) {
+      console.warn(`API Not Found (404): ${endpoint}. Sunucu henüz hazır değil veya URL yanlış.`);
+      if (endpoint.includes('list') || endpoint.includes('properties') || endpoint.includes('advisors') || endpoint.includes('cities')) {
+        return [] as unknown as T;
+      }
+      throw new Error("İstediğiniz kaynak bulunamadı.");
+    }
 
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -50,16 +54,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       
       return result.data !== undefined ? result.data : result;
     } else {
-      if (response.status === 404) {
-        throw new Error(`API Endpoint bulunamadı (404): ${endpoint}. Lütfen VITE_API_URL yapılandırmasını kontrol edin.`);
-      }
-      if (!response.ok) {
-        throw new Error(`Sunucu Hatası: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Sunucu Hatası: ${response.status}`);
       return {} as T;
     }
   } catch (error) {
-    console.error("API Bağlantı Hatası:", error);
+    // Liste çekme isteklerinde hata fırlatmak yerine boş liste dönerek UI'ı koru
+    if (endpoint.includes('list') || endpoint.includes('properties') || endpoint.includes('advisors') || endpoint.includes('cities')) {
+      console.error("Bağlantı hatası, boş veri dönülüyor:", error);
+      return [] as unknown as T;
+    }
     throw error;
   }
 }

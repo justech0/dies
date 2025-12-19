@@ -24,8 +24,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // İlk yüklemede localStorage'dan veriyi alarak "disappearing name" sorununu çözüyoruz
   const [user, setUser] = useState<User | null>(() => {
-    // Başlangıçta localStorage'dan önbelleğe alınmış kullanıcıyı oku
     const savedUser = localStorage.getItem('dies_user');
     try {
       return savedUser ? JSON.parse(savedUser) : null;
@@ -33,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null;
     }
   });
+  
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -44,12 +45,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(userData);
                 localStorage.setItem('dies_user', JSON.stringify(userData));
             } catch (error) {
-                console.error("Oturum geçersiz veya süresi dolmuş", error);
-                // 401 veya token hatası durumunda temizle
+                // Eğer hata 404 ise (backend hazır değilse) oturumu kapatma, eldeki veriyi koru
                 const err = error as Error;
-                if (err.message?.includes('401') || err.message?.includes('token') || err.message?.includes('Oturum')) {
+                if (err.message?.includes('401') || err.message?.includes('token')) {
                     logout();
                 }
+                console.warn("Auth check failed (likely no backend):", error);
             }
         } else {
             setUser(null);
