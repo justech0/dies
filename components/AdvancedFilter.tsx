@@ -178,9 +178,9 @@ export const AdvancedFilter: React.FC<FilterProps> = ({ onFilter }) => {
                   </select>
               </div>
               <div>
-                  <label className={labelClass}>Mahalle</label>
+                  <label className={labelClass}>Mahalle / Köy</label>
                   <select name="neighborhood" value={filters.neighborhood} onChange={handleChange} className={inputClass} disabled={!filters.district}>
-                      <option value="">Mahalle Seçiniz</option>
+                      <option value="">Mahalle / Köy Seçiniz</option>
                       {neighborhoods.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
                   </select>
               </div>

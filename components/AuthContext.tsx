@@ -24,7 +24,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    // Başlangıçta localStorage'dan önbelleğe alınmış kullanıcıyı oku
+    const savedUser = localStorage.getItem('dies_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -34,10 +38,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
                 const userData = await api.auth.me();
                 setUser(userData);
+                localStorage.setItem('dies_user', JSON.stringify(userData));
             } catch (error) {
-                console.error("Session expired or invalid", error);
-                localStorage.removeItem('dies_token');
+                console.error("Oturum geçersiz veya süresi dolmuş", error);
+                // Sadece API gerçekten hata verirse temizle (404 hariç)
+                if ((error as Error).message?.includes('401') || (error as Error).message?.includes('token')) {
+                    logout();
+                }
             }
+        } else {
+            setUser(null);
+            localStorage.removeItem('dies_user');
         }
         setIsLoading(false);
     };
@@ -46,8 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (userData: User, token?: string) => {
     setUser(userData);
-    // If token is provided (fresh login), save it. 
-    // If updating profile (no token param), keep existing token.
+    localStorage.setItem('dies_user', JSON.stringify(userData));
     if (token) {
         localStorage.setItem('dies_token', token);
     }
@@ -56,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('dies_token');
+    localStorage.removeItem('dies_user');
   };
 
   return (

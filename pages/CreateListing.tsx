@@ -19,7 +19,7 @@ export const CreateListing = () => {
   const [submitted, setSubmitted] = useState(false);
   const [createdId, setCreatedId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
+  const [isCompressing, setIsLoadingCompressing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   
   const [images, setImages] = useState<File[]>([]);
@@ -116,7 +116,7 @@ export const CreateListing = () => {
       alert("En fazla 15 fotoğraf yükleyebilirsiniz.");
       return;
     }
-    setIsCompressing(true);
+    setIsLoadingCompressing(true);
     try {
       const processedFiles = await Promise.all(
         files.map(file => compressToWebp(file, { quality: 0.75, maxDimension: 1920 }))
@@ -128,7 +128,7 @@ export const CreateListing = () => {
       console.error("Compression failed", error);
       alert("Fotoğraf işlenirken hata oluştu.");
     } finally {
-      setIsCompressing(false);
+      setIsLoadingCompressing(false);
     }
   };
 
@@ -345,9 +345,9 @@ export const CreateListing = () => {
                  </select>
               </div>
               <div>
-                 <label className={labelClass}>Mahalle</label>
+                 <label className={labelClass}>Mahalle / Köy</label>
                  <select required name="neighborhood" value={locationState.neighborhood} onChange={handleLocationChange} className={inputClass}>
-                   <option>Seçiniz</option>
+                   <option>Mahalle / Köy Seçiniz</option>
                    {neighborhoods.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
                  </select>
               </div>

@@ -18,7 +18,7 @@ Bu döküman Dies Gayrimenkul PHP API'si için tek kaynak noktasıdır. Backend 
 - **properties**:
   - `id, advisor_id (FK)`
   - `title, description, price (decimal 15,2), currency (TL|USD|EUR)`
-  - `province, district, neighborhood`
+  - `province, district, neighborhood (Bu alan Mahalle veya Köy bilgisini tutar)`
   - `category (Konut|Ticari|Arsa)`
   - `listing_intent (sale|rent)`
   - `listing_status (pending|approved|rejected|archived)`
@@ -44,14 +44,14 @@ Backend, frontend'den gelen şu parametreleri KABUL ETMELİ ve iç kolonlara map
 - `isFurnished`: "Evet" -> is_furnished=1
 - `hasBalcony`: "Evet" -> has_balcony=1
 - `floorLocation`: floor_location kolonu
-- `province / district / neighborhood`: Konum filtreleri
+- `province / district / neighborhood`: Konum filtreleri (neighborhood parametresi hem mahalleleri hem de köyleri kapsamalıdır)
 
 **Response Data:** Her property objesi mutlaka `"type"` alanını içermelidir (Örn: "Satılık", "Satıldı").
 
 ### 2. Lokasyon Servisi
 - `GET /api/locations/cities`: Tüm iller.
 - `GET /api/locations/districts?city_id={id}`: İle ait ilçeler.
-- `GET /api/locations/neighborhoods?district_id={id}`: İlçeye ait mahalleler.
+- `GET /api/locations/neighborhoods?district_id={id}`: İlçeye ait mahalleler ve köyler.
 
 ### 3. Danışmanlar & Ofisler
 - `GET /api/advisors`: Onaylı danışman listesi.

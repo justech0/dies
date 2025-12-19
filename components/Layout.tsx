@@ -119,14 +119,14 @@ const Navbar = () => {
               ) : (
                 <Link 
                   to="/giris"
-                  className={`flex items-center gap-2 px-8 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 text-xs shadow-md ${
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold transition-all transform hover:scale-105 text-[11px] shadow-md whitespace-nowrap ${
                     isHome && !isScrolled 
                     ? 'bg-white text-dies-blue hover:bg-gray-100' 
                     : 'bg-dies-blue text-white hover:bg-blue-900'
                   }`}
                 >
                   <UserIcon size={14} />
-                  Giriş Yap
+                  Giriş Yap / Üye Ol
                 </Link>
               )}
             </div>
@@ -152,14 +152,11 @@ const Navbar = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-[60] flex flex-col bg-white"
           >
-            {/* MOBİL BAŞLIK: LOGO - GİRİŞ YAP / ÜYE OL - KAPAT */}
             <div className="p-4 flex items-center justify-between border-b border-gray-100 bg-white shadow-sm">
-              {/* Sol: Mini Logo */}
               <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="shrink-0">
                 <DiesLogoIcon className="h-6 w-auto" />
               </Link>
 
-              {/* Orta: Giriş Yap / Üye Ol (Zarif Buton) */}
               <div className="flex-1 flex justify-center px-4">
                 {user ? (
                     <Link 
@@ -180,7 +177,6 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Sağ: Kapat */}
               <button 
                 onClick={() => setIsMobileMenuOpen(false)} 
                 className="p-2 text-dies-blue hover:text-dies-red transition-colors shrink-0"
@@ -218,7 +214,6 @@ const Navbar = () => {
               <hr className="border-gray-100 my-4" />
               
               <div className="space-y-6">
-                {/* İlan Yayınla - Sadece Giriş Yapılmışsa Aktif */}
                 {user && (
                   <>
                     <Link 
