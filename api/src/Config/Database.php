@@ -10,13 +10,25 @@ class Database
 {
     public static function connection(): PDO
     {
-        $host = getenv('DB_HOST');
-        $db   = getenv('DB_NAME');
-        $user = getenv('DB_USER');
-        $pass = getenv('DB_PASS');
+        $fetch = function (string $key) {
+            if (isset($_ENV[$key])) return $_ENV[$key];
+            if (isset($_SERVER[$key])) return $_SERVER[$key];
+            return getenv($key);
+        };
 
-        if (!$host || !$db || !$user) {
-            Response::error(500, 'Veritabanı ortam değişkenleri eksik.', ['missing_keys' => ['DB_HOST', 'DB_NAME', 'DB_USER']]);
+        $host = $fetch('DB_HOST');
+        $db   = $fetch('DB_NAME');
+        $user = $fetch('DB_USER');
+        $pass = $fetch('DB_PASS');
+
+        $missing = [];
+        foreach (['DB_HOST' => $host, 'DB_NAME' => $db, 'DB_USER' => $user] as $key => $value) {
+            if (!$value) {
+                $missing[] = $key;
+            }
+        }
+        if ($missing) {
+            Response::error(500, 'Veritabanı ortam değişkenleri eksik.', ['missing_keys' => $missing]);
         }
 
         try {

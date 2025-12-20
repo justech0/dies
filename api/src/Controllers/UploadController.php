@@ -31,7 +31,8 @@ class UploadController
             if (!is_dir($dir)) {
                 mkdir($dir, 0775, true);
             }
-            $filename = uniqid('img_', true) . '.webp';
+            $filename = pathinfo($file['name'], PATHINFO_FILENAME) ?: 'upload';
+            $filename = uniqid($filename . '_', true) . '.webp';
             $dest = $dir . '/' . $filename;
             if (!move_uploaded_file($file['tmp_name'], $dest)) {
                 Response::error(500, 'Dosya kaydedilirken hata oluştu.');

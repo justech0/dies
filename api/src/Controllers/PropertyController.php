@@ -132,19 +132,31 @@ class PropertyController
         $description = trim($payload['description'] ?? '');
         $price = $payload['price'] ?? null;
         $category = $payload['category'] ?? null;
-        $listingIntent = $payload['listing_intent'] ?? ($payload['intent'] ?? null);
-        $province = $payload['province'] ?? null;
+        $listingIntent = $payload['listing_intent'] ?? ($payload['listingIntent'] ?? ($payload['intent'] ?? null));
+        $province = $payload['province'] ?? ($payload['city'] ?? null);
         $district = $payload['district'] ?? null;
         $neighborhood = $payload['neighborhood'] ?? null;
         $image = $payload['image'] ?? null;
-        if (!$title || !$description || !$price || !$category || !$listingIntent || !$province || !$district || !$neighborhood || !$image) {
+        $imagesInput = $payload['images'] ?? [];
+        if (!is_array($imagesInput)) {
+            $imagesInput = [];
+        }
+        if ($image && empty($imagesInput)) {
+            $imagesInput[] = $image;
+        }
+        if (!$title || !$price || !$category || !$listingIntent || !$province || !$district || !$neighborhood || !$image) {
             Response::error(422, 'Zorunlu alanlar eksik.');
         }
+        $description = $description ?: '';
 
         $status = ($user['role'] === 'advisor' || $user['role'] === 'admin') ? 'approved' : 'pending';
         $advisorId = ($user['role'] === 'advisor') ? $user['id'] : ($payload['advisor_id'] ?? null);
-        $images = isset($payload['images']) ? json_encode($payload['images']) : json_encode([]);
-        $features = isset($payload['features']) ? json_encode($payload['features']) : json_encode([]);
+        $images = json_encode($imagesInput);
+        $featuresInput = $payload['features'] ?? [];
+        if (!is_array($featuresInput)) {
+            $featuresInput = [];
+        }
+        $features = json_encode($featuresInput);
 
         $stmt = $pdo->prepare('INSERT INTO properties (created_by, advisor_id, title, description, price, currency, province, district, neighborhood, category, listing_intent, listing_status, listing_state, image, images, bedrooms, bathrooms, area_gross, area_net, floor_location, heating_type, building_age, balcony_count, is_furnished, is_in_complex, has_balcony, features, sahibinden_link, is_featured, created_at, updated_at) VALUES (?, ?, ?, ?, ?, "TL", ?, ?, ?, ?, ?, ?, "active", ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
         $stmt->execute([
@@ -163,15 +175,15 @@ class PropertyController
             $images,
             $payload['bedrooms'] ?? null,
             $payload['bathrooms'] ?? null,
-            $payload['area_gross'] ?? null,
-            $payload['area_net'] ?? null,
-            $payload['floor_location'] ?? null,
-            $payload['heating_type'] ?? null,
-            $payload['building_age'] ?? null,
-            $payload['balcony_count'] ?? 0,
-            !empty($payload['is_furnished']) ? 1 : 0,
+            $payload['area_gross'] ?? ($payload['areaGross'] ?? null),
+            $payload['area_net'] ?? ($payload['areaNet'] ?? null),
+            $payload['floor_location'] ?? ($payload['floorLocation'] ?? null),
+            $payload['heating_type'] ?? ($payload['heatingType'] ?? null),
+            $payload['building_age'] ?? ($payload['buildingAge'] ?? null),
+            $payload['balcony_count'] ?? ($payload['balconyCount'] ?? 0),
+            !empty($payload['is_furnished'] ?? $payload['isFurnished']) ? 1 : 0,
             !empty($payload['is_in_complex']) ? 1 : 0,
-            !empty($payload['has_balcony']) ? 1 : 0,
+            !empty($payload['has_balcony'] ?? $payload['hasBalcony']) ? 1 : 0,
             $features,
             $payload['sahibinden_link'] ?? null,
             !empty($payload['is_featured']) ? 1 : 0,

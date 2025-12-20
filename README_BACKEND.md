@@ -5,7 +5,7 @@ Bu klasör, Vite/React frontend'i bozmadan `/api` altında çalışan PHP 8 + My
 ## Kurulum
 1. `cd api`
 2. `cp .env.example .env` dosyasını doldurun (DB_HOST / DB_NAME / DB_USER / DB_PASS / JWT_SECRET zorunlu). Yanlış env anahtarları bağlantıyı kırar.
-3. Tek veritabanı kurulumu: boş bir MySQL veritabanı oluşturun ve `database/dies_full_schema_with_locations.sql` dosyasını phpMyAdmin veya mysql CLI ile içe aktarın. Ek bir `schema.sql`/`database.sql` **kullanmayın**; eski dosyalar kaldırıldı.
+3. Tek veritabanı kurulumu: boş bir MySQL veritabanı oluşturun ve `database/dies_full_schema_with_locations.sql` dosyasını phpMyAdmin veya mysql CLI ile içe aktarın. Ek bir `schema.sql`/`database.sql` **kullanmayın**; eski dosyalar kaldırıldı. Şema güncellemesi gerekiyorsa `api/database_patch_v3_4.sql` dosyasını çalıştırın (deleted_at, currency, founder vb. alanlar eklenir).
 4. Üretim kurulumu için vendor klasörünü oluşturun:
    ```bash
    cd api
@@ -14,7 +14,9 @@ Bu klasör, Vite/React frontend'i bozmadan `/api` altında çalışan PHP 8 + My
    - Hostinger gibi composer olmayan ortamlarda vendor'ı lokalde oluşturup `api/vendor` klasörünü sunucuya yükleyebilirsiniz.
    - `vendor` yoksa API 500 döndürür.
 5. `uploads` klasörünün yazılabilir olduğundan emin olun; yoksa uygulama ilk açılışta otomatik oluşturur. `api/error.txt` de yazılabilir olmalıdır.
-6. Web sunucusunda `.htaccess` ile tüm istekleri `/api/index.php`'ye yönlendirin.
+6. Web sunucusu kuralları:
+   - Kök `.htaccess`: `/api` isteklerini bypass edip diğer her şeyi `index.html`'e yönlendirir (SPA fallback).
+   - `api/.htaccess`: gerçek dosyaları (uploads vb.) hariç tüm istekleri `api/index.php`'ye yönlendirir ve Authorization header'ını PHP'ye taşır.
 
 ## Önemli Yol Notu
 Frontend `VITE_API_URL + /api` kullanır. Router şu sırayla davranır:

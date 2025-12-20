@@ -52,11 +52,15 @@ set_error_handler(function ($severity, $message, $file, $line) use ($requestId) 
 });
 
 // CORS
-$allowedOrigin = getenv('FRONTEND_URL') ?: '*';
-header('Access-Control-Allow-Origin: ' . $allowedOrigin);
+$allowedOrigin = getenv('FRONTEND_URL');
+if ($allowedOrigin) {
+    header('Access-Control-Allow-Origin: ' . $allowedOrigin);
+    header('Access-Control-Allow-Credentials: true');
+} else {
+    header('Access-Control-Allow-Origin: *');
+}
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Credentials: true');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -190,6 +194,14 @@ $router->add('POST', '/applications/office', function ($req) use ($pdo) {
 $router->add('GET', '/admin/stats', function () use ($pdo, $currentUser) {
     if (!$currentUser || $currentUser['role'] !== 'admin') Response::error(403, 'Bu işlem için yetkiniz yok.');
     AdminController::stats($pdo);
+});
+$router->add('GET', '/admin/advisors', function () use ($pdo, $currentUser) {
+    if (!$currentUser || $currentUser['role'] !== 'admin') Response::error(403, 'Bu işlem için yetkiniz yok.');
+    AdminController::advisors($pdo);
+});
+$router->add('POST', '/admin/advisors/{id}', function ($req, $params) use ($pdo, $currentUser) {
+    if (!$currentUser || $currentUser['role'] !== 'admin') Response::error(403, 'Bu işlem için yetkiniz yok.');
+    AdminController::updateAdvisor($pdo, (int)$params['id'], $req->body);
 });
 $router->add('GET', '/admin/properties/pending', function () use ($pdo, $currentUser) {
     if (!$currentUser || $currentUser['role'] !== 'admin') Response::error(403, 'Bu işlem için yetkiniz yok.');
