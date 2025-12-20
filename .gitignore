@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# PHP backend
+api/vendor
+api/.env
+api/uploads
+api/error.txt

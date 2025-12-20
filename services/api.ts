@@ -1,5 +1,5 @@
 
-import { Property, User, Advisor, Office, AdvisorApplication, OfficeApplication } from '../types';
+import { Property, User, Advisor, Office, AdvisorApplication, OfficeApplication, Place, LocationItem } from '../types';
 
 const getApiUrl = () => {
   try {
@@ -93,9 +93,9 @@ export const api = {
   },
 
   locations: {
-    getCities: () => request<any[]>('/locations/cities'),
-    getDistricts: (cityId: number | string) => request<any[]>(`/locations/districts?city_id=${cityId}`),
-    getNeighborhoods: (districtId: number | string) => request<any[]>(`/locations/neighborhoods?district_id=${districtId}`),
+    getCities: () => request<LocationItem[]>('/locations/cities'),
+    getDistricts: (cityId: number | string) => request<LocationItem[]>(`/locations/districts?city_id=${cityId}`),
+    getNeighborhoods: (districtId: number | string) => request<Place[]>(`/locations/neighborhoods?district_id=${districtId}`),
   },
 
   properties: {

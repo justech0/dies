@@ -5,7 +5,7 @@ import { CheckCircle, Lock, X, Image as ImageIcon, Loader, ArrowRight, UploadClo
 import { useAuth } from '../components/AuthContext';
 // @ts-ignore
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Property } from '../types';
+import { LocationItem, Place, Property } from '../types';
 import { api } from '../services/api';
 import { compressToWebp } from '../utils/image';
 
@@ -26,9 +26,9 @@ export const CreateListing = () => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   
-  const [cities, setCities] = useState<any[]>([]);
-  const [districts, setDistricts] = useState<any[]>([]);
-  const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
+  const [cities, setCities] = useState<LocationItem[]>([]);
+  const [districts, setDistricts] = useState<LocationItem[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<Place[]>([]);
 
   const [locationState, setLocationState] = useState({
     province: '',
@@ -331,7 +331,7 @@ export const CreateListing = () => {
                 <label className={labelClass}>İl</label>
                 <select required name="province" value={locationState.province} onChange={handleLocationChange} className={inputClass}>
                   <option value="">Seçiniz</option>
-                  {cities.map(city => <option key={city.id} value={city.name}>{city.name}</option>)}
+                  {cities.map(city => <option key={String(city.id)} value={city.name}>{city.name}</option>)}
                 </select>
               </div>
             </div>
@@ -341,14 +341,14 @@ export const CreateListing = () => {
                  <label className={labelClass}>İlçe</label>
                  <select required name="district" value={locationState.district} onChange={handleLocationChange} className={inputClass}>
                    <option>Seçiniz</option>
-                   {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                   {districts.map(d => <option key={String(d.id)} value={d.name}>{d.name}</option>)}
                  </select>
               </div>
               <div>
                  <label className={labelClass}>Mahalle / Köy</label>
                  <select required name="neighborhood" value={locationState.neighborhood} onChange={handleLocationChange} className={inputClass}>
                    <option>Mahalle / Köy Seçiniz</option>
-                   {neighborhoods.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
+                   {neighborhoods.map(n => <option key={String(n.id)} value={n.name}>{n.name}</option>)}
                  </select>
               </div>
               <div>
